@@ -1,0 +1,6 @@
+{
+  "name": "CoGo Carpooling UI",
+  "description": "Giao diện trang chủ ứng dụng đi chung xe",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
