@@ -21,34 +21,46 @@ export const api = {
       }
       return response.json();
     },
-    clearData: async () => {
-      const response = await fetch('/api/auth/clear', {
-        method: 'DELETE'
+    register: async (phone: string, name: string, intro_text?: string) => {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ phone, name, intro_text })
       });
       if (!response.ok) {
-        throw new Error('Clear data failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Register failed');
       }
       return response.json();
     }
   },
   rides: {
-    create: async (userId: string, pickupLocation: Location, dropoffLocation: Location) => {
+    create: async (userId: string, pickupLocation: Location, dropoffLocation: Location, typeRide: string) => {
       const response = await fetch('/api/rides', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ userId, pickupLocation, dropoffLocation })
+        body: JSON.stringify({ userId, pickupLocation, dropoffLocation, typeRide })
       });
       if (!response.ok) {
-        throw new Error('Failed to create ride');
+        throw new Error(`Failed to create ride: ${response.status}`);
+      }
+      return response.json();
+    },
+    getAvailable: async () => {
+      const response = await fetch('/api/rides/available');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch available rides: ${response.status}`);
       }
       return response.json();
     },
     getByUserId: async (userId: string) => {
       const response = await fetch(`/api/rides/${userId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch rides');
+        throw new Error(`Failed to fetch rides: ${response.status}`);
       }
       return response.json();
     }
@@ -74,6 +86,43 @@ export const api = {
       const response = await fetch(`/api/locations/suggest?q=${encodeURIComponent(query)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch location suggestions');
+      }
+      return response.json();
+    }
+  },
+  posts: {
+    getAll: async () => {
+      const response = await fetch('/api/posts');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch posts: ${response.status}`);
+      }
+      return response.json();
+    },
+    create: async (data: { user_id: number; content: string; departure_point?: string; destination_point?: string; media_url?: string; ride_frequency?: string; privacy?: string }) => {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to create post: ${response.status}`);
+      }
+      return response.json();
+    }
+  },
+  users: {
+    update: async (userId: string, data: { avatar_url?: string; background_url?: string }) => {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to update user: ${response.status}`);
       }
       return response.json();
     }

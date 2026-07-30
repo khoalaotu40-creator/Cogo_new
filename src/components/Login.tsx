@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Phone, GraduationCap, Building2, Loader2, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Phone, GraduationCap, Building2, Loader2, Trash2, LogIn, UserPlus } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface LoginProps {
@@ -7,44 +7,44 @@ interface LoginProps {
 }
 
 export default function Login({ onLoginSuccess }: LoginProps) {
-  const [authMethod, setAuthMethod] = useState<'phone' | 'student' | 'company'>('phone');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [name, setName] = useState('');
+  const [introText, setIntroText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phoneNumber.trim().length >= 10) {
       setIsLoading(true);
       setError('');
       try {
-        const response = await api.auth.login(phoneNumber);
+        let user;
+        if (authMode === 'login') {
+          const response = await api.auth.login(phoneNumber);
+          user = response.user;
+        } else {
+          if (!name.trim()) {
+            setError('Vui lòng nhập họ và tên');
+            setIsLoading(false);
+            return;
+          }
+          const response = await api.auth.register(phoneNumber, name, introText);
+          user = response.user;
+        }
+        
         // Save user to local storage for persistence across tabs
-        localStorage.setItem('cogo_user', JSON.stringify(response.user));
-        onLoginSuccess(response.user);
+        localStorage.setItem('cogo_user', JSON.stringify(user));
+        onLoginSuccess(user);
       } catch (err: any) {
-        setError('Đăng nhập thất bại. Vui lòng thử lại.');
+        setError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
       } finally {
         setIsLoading(false);
       }
     }
   };
 
-  const handleClearData = async () => {
-    if (confirm('Bạn có chắc muốn xoá toàn bộ dữ liệu người dùng trên server? (Cho mục đích test)')) {
-      setIsClearing(true);
-      try {
-        await api.auth.clearData();
-        localStorage.removeItem('cogo_user');
-        alert('Đã xoá toàn bộ dữ liệu');
-      } catch (e) {
-        alert('Lỗi xoá dữ liệu');
-      } finally {
-        setIsClearing(false);
-      }
-    }
-  };
 
   return (
     <div className="flex-1 bg-[#008f55] flex flex-col h-full relative">
@@ -63,44 +63,39 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
       {/* Main Card */}
       <div className="bg-white rounded-[32px] m-4 p-6 shadow-xl relative z-10">
-        <h2 className="text-[22px] font-bold text-gray-900 mb-2">Đăng nhập / Đăng ký</h2>
+        <h2 className="text-[22px] font-bold text-gray-900 mb-2">
+          {authMode === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+        </h2>
         <p className="text-[14px] text-gray-500 mb-6">
-          Xác thực nhanh để bắt đầu ghép chuyến an toàn.
+          {authMode === 'login' ? 'Đăng nhập để ghép chuyến an toàn.' : 'Tạo tài khoản mới để bắt đầu.'}
         </p>
 
         {/* Auth Method Toggle */}
         <div className="bg-gray-100 p-1 rounded-full flex gap-1 mb-6">
           <button
-            onClick={() => setAuthMethod('phone')}
+            onClick={() => setAuthMode('login')}
+            type="button"
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-medium transition-colors ${
-              authMethod === 'phone' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              authMode === 'login' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <Phone className="w-4 h-4" />
-            SĐT
+            <LogIn className="w-4 h-4" />
+            Đăng nhập
           </button>
           <button
-            onClick={() => setAuthMethod('student')}
+            onClick={() => setAuthMode('register')}
+            type="button"
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-medium transition-colors ${
-              authMethod === 'student' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              authMode === 'register' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <GraduationCap className="w-4 h-4" />
-            Sinh viên
-          </button>
-          <button
-            onClick={() => setAuthMethod('company')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-medium transition-colors ${
-              authMethod === 'company' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            Công ty
+            <UserPlus className="w-4 h-4" />
+            Đăng ký
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-6">
+        <form onSubmit={handleAuth} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Số điện thoại
@@ -112,16 +107,46 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               placeholder="0901 234 567"
               className="w-full bg-white border border-gray-200 rounded-full px-4 py-3 text-[15px] font-medium outline-none focus:border-[#008f55] focus:ring-1 focus:ring-[#008f55] transition-all"
             />
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
+
+          {authMode === 'register' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Họ và tên
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nguyễn Văn A"
+                  className="w-full bg-white border border-gray-200 rounded-full px-4 py-3 text-[15px] font-medium outline-none focus:border-[#008f55] focus:ring-1 focus:ring-[#008f55] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Giới thiệu bản thân (Không bắt buộc)
+                </label>
+                <textarea
+                  value={introText}
+                  onChange={(e) => setIntroText(e.target.value)}
+                  placeholder="Một vài điều về bạn..."
+                  rows={2}
+                  className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-[15px] font-medium outline-none focus:border-[#008f55] focus:ring-1 focus:ring-[#008f55] transition-all resize-none"
+                />
+              </div>
+            </>
+          )}
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
-            disabled={phoneNumber.trim().length < 10 || isLoading}
-            className="w-full bg-[#008f55] hover:bg-[#007a48] disabled:bg-gray-300 disabled:text-gray-500 text-white font-bold py-3.5 rounded-full text-[15px] transition-colors flex items-center justify-center gap-2"
+            disabled={phoneNumber.trim().length < 10 || (authMode === 'register' && name.trim().length === 0) || isLoading}
+            className="w-full bg-[#008f55] hover:bg-[#007a48] disabled:bg-gray-300 disabled:text-gray-500 text-white font-bold py-3.5 rounded-full text-[15px] transition-colors flex items-center justify-center gap-2 mt-2"
           >
             {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-            Gửi mã xác thực
+            {authMode === 'login' ? 'Đăng nhập' : 'Đăng ký'}
           </button>
         </form>
 
@@ -130,16 +155,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         </p>
       </div>
 
-      <div className="px-10 z-10 relative">
-         <button 
-           onClick={handleClearData}
-           disabled={isClearing}
-           className="w-full flex items-center justify-center gap-2 p-3 bg-red-500/20 text-white rounded-full font-medium hover:bg-red-500/30 transition-colors text-[14px]"
-         >
-           {isClearing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-           Xóa toàn bộ Data (Test)
-         </button>
-      </div>
 
       {/* Footer */}
       <div className="absolute bottom-6 w-full text-center">

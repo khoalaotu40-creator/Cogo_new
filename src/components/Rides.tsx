@@ -15,12 +15,21 @@ export default function Rides({ onFindRide }: RidesProps) {
     const fetchRides = async () => {
       try {
         const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
-        if (user.id) {
-          const fetchedRides = await api.rides.getByUserId(user.id);
+        const userId = user.id || user.id_user;
+        if (!userId || isNaN(Number(userId))) {
+          // invalid session
+          return;
+        }
+        if (userId) {
+          const fetchedRides = await api.rides.getByUserId(userId);
           setRides(fetchedRides);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to fetch rides:', error);
+        if (error.message && error.message.includes('401')) {
+          localStorage.removeItem('cogo_user');
+          window.location.reload();
+        }
       } finally {
         setIsLoading(false);
       }
@@ -72,7 +81,7 @@ export default function Rides({ onFindRide }: RidesProps) {
               <div key={ride.id_ride} className="border border-gray-200 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-center mb-3">
                   <div className="bg-green-100 text-[#008f55] text-xs font-bold px-3 py-1 rounded-full">Sắp khởi hành</div>
-                  <div className="text-gray-500 text-xs">Mã chuyến: {ride.id_ride.substring(0, 8)}...</div>
+                  <div className="text-gray-500 text-xs">Mã chuyến: {ride.id_ride.toString().substring(0, 8)}...</div>
                 </div>
 
                 {ride.pickup_location && (

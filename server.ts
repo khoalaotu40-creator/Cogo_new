@@ -4,6 +4,8 @@ import { createServer as createViteServer } from "vite";
 import locationsRouter from "./server/api/locations";
 import authRouter from "./server/api/auth";
 import ridesRouter from "./server/api/rides";
+import postsRouter from "./server/api/posts";
+import usersRouter from "./server/api/users";
 import { initDb } from "./server/db";
 
 async function startServer() {
@@ -14,12 +16,14 @@ async function startServer() {
   await initDb();
 
   // Middleware
-  app.use(express.json());
+  app.use(express.json({ limit: '50mb' }));
 
   // API routes
   app.use("/api/locations", locationsRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/rides", ridesRouter);
+  app.use("/api/posts", postsRouter);
+  app.use("/api/users", usersRouter);
   
   // Health check
   app.get("/api/health", (req, res) => {
