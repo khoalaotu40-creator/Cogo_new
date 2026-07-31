@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, Plus, Pencil, Briefcase, GraduationCap, Home, MapPin, Heart, MoreHorizontal, X, Loader2 } from 'lucide-react';
+import { Camera, Plus, Pencil, Briefcase, GraduationCap, Home, MapPin, Heart, MoreHorizontal, X, Loader2, Waypoints } from 'lucide-react';
 import { api } from '../../lib/api';
 
 export default function Profile() {
@@ -125,7 +125,7 @@ export default function Profile() {
         </label>
         
         <div className="mt-3">
-          <h1 className="text-[24px] font-bold text-gray-900">{user.name || "Minh Nguyễn"}</h1>
+          <h1 className="text-[24px] font-bold text-gray-900">{user.name || "Người dùng"}</h1>
           <p className="text-[15px] text-gray-700 mt-1.5 leading-relaxed">
             {user.intro_text || "Đam mê xê dịch, thích kết nối và chia sẻ những chuyến đi xanh. 🌿"}
           </p>
@@ -148,49 +148,17 @@ export default function Profile() {
       <div className="h-2 bg-[#f0f2f5] w-full mt-5"></div>
 
       {/* Details Section */}
-      <div className="px-4 py-5">
-        <h2 className="text-[18px] font-bold text-gray-900 mb-4">Chi tiết</h2>
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 text-[15px] text-gray-800">
-            <Briefcase className="w-[24px] h-[24px] text-gray-400 shrink-0" />
-            <span>Làm việc tại <span className="font-semibold text-gray-900">EcoRide Vietnam</span></span>
+      <div className="px-4 py-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#f4f6fc] rounded-[16px] p-5 flex flex-col items-center justify-center border border-transparent shadow-sm">
+            <Waypoints className="w-8 h-8 text-[#006b3f] mb-3 stroke-[2]" />
+            <span className="text-[32px] font-bold text-[#1a2b4b] leading-tight mb-1">120</span>
+            <span className="text-[13px] font-bold text-gray-500 tracking-wide">SỐ CHUYẾN ĐI</span>
           </div>
-          <div className="flex items-center gap-3 text-[15px] text-gray-800">
-            <GraduationCap className="w-[24px] h-[24px] text-gray-400 shrink-0" />
-            <span>Từng học tại <span className="font-semibold text-gray-900">Đại học Khoa học Tự nhiên</span></span>
-          </div>
-          <div className="flex items-center gap-3 text-[15px] text-gray-800">
-            <Home className="w-[24px] h-[24px] text-gray-400 shrink-0" />
-            <span>Sống tại <span className="font-semibold text-gray-900">Thành phố Hồ Chí Minh</span></span>
-          </div>
-          <div className="flex items-center gap-3 text-[15px] text-gray-800">
-            <MapPin className="w-[24px] h-[24px] text-gray-400 shrink-0" />
-            <span>Đến từ <span className="font-semibold text-gray-900">Đà Lạt</span></span>
-          </div>
-          <div className="flex items-center gap-3 text-[15px] text-gray-800">
-            <Heart className="w-[24px] h-[24px] text-gray-400 shrink-0" />
-            <span>Độc thân</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="h-2 bg-[#f0f2f5] w-full"></div>
-
-      {/* Recent Trips Section */}
-      <div className="px-4 py-5">
-        <h2 className="text-[18px] font-bold text-gray-900 mb-4">Chuyến đi gần đây</h2>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="aspect-square rounded-[10px] overflow-hidden bg-gray-100">
-            <img src="https://images.unsplash.com/photo-1506744626753-1436cecb0a37?w=400&h=400&fit=crop" alt="Trip 1" className="w-full h-full object-cover" />
-          </div>
-          <div className="aspect-square rounded-[10px] overflow-hidden bg-gray-100">
-            <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=400&fit=crop" alt="Trip 2" className="w-full h-full object-cover" />
-          </div>
-          <div className="aspect-square rounded-[10px] overflow-hidden bg-gray-100">
-            <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=400&fit=crop" alt="Trip 3" className="w-full h-full object-cover" />
-          </div>
-          <div className="aspect-square rounded-[10px] bg-[#e6ebf5] flex items-center justify-center cursor-pointer hover:bg-[#d8dadf] transition-colors">
-            <MoreHorizontal className="w-8 h-8 text-[#008f55]" />
+          <div className="bg-[#f4f6fc] rounded-[16px] p-5 flex flex-col items-center justify-center border border-transparent shadow-sm">
+            <MapPin className="w-8 h-8 text-[#006b3f] mb-3 stroke-[2]" />
+            <span className="text-[32px] font-bold text-[#1a2b4b] leading-tight mb-1">2,450</span>
+            <span className="text-[13px] font-bold text-gray-500 tracking-wide">TỔNG SỐ KM</span>
           </div>
         </div>
       </div>

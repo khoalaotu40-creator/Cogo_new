@@ -110,10 +110,50 @@ export const api = {
         throw new Error(`Failed to create post: ${response.status}`);
       }
       return response.json();
+    },
+    join: async (postId: number, data: { user_id: string; message: string; requested_seats: number; pickup_point: any; dropoff_point: any }) => {
+      const response = await fetch(`/api/posts/${postId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to join post: ${response.status}`);
+      }
+      return response.json();
+    },
+    getUserRequests: async (userId: string) => {
+      const response = await fetch(`/api/posts/requests/${userId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user requests: ${response.status}`);
+      }
+      return response.json();
+    },
+    getNotifications: async (userId: string) => {
+      const response = await fetch(`/api/posts/notifications/${userId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch notifications: ${response.status}`);
+      }
+      return response.json();
+    },
+    respondToRequest: async (requestId: number, status: 'accepted' | 'rejected') => {
+      const response = await fetch(`/api/posts/requests/${requestId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to respond to request: ${response.status}`);
+      }
+      return response.json();
     }
   },
   users: {
-    update: async (userId: string, data: { avatar_url?: string; background_url?: string }) => {
+    update: async (userId: string, data: { avatar_url?: string; background_url?: string; driver_id?: number }) => {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
         headers: {

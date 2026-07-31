@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Car, MapPin, Loader2 } from 'lucide-react';
 import { api } from '../../lib/api';
+import RouteMap from './RouteMap';
 
 interface RidesProps {
   onFindRide: () => void;
@@ -10,6 +11,7 @@ export default function Rides({ onFindRide }: RidesProps) {
   const [rideSubTab, setRideSubTab] = useState('upcoming');
   const [rides, setRides] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRide, setSelectedRide] = useState<any>(null);
 
   useEffect(() => {
     const fetchRides = async () => {
@@ -36,6 +38,20 @@ export default function Rides({ onFindRide }: RidesProps) {
     };
     fetchRides();
   }, []);
+
+  if (selectedRide) {
+    return (
+      <div className="flex-1 absolute inset-0 z-50 bg-white">
+        <RouteMap
+          pickupLocation={selectedRide.Diem_don || selectedRide.pickup_location || { lat: 10.8231, lng: 106.6297, name: "Chưa xác định", address: "Chưa xác định" }}
+          dropoffLocation={selectedRide.Diem_den || { lat: 10.8231, lng: 106.6297, name: "Chưa xác định", address: "Chưa xác định" }}
+          onBack={() => setSelectedRide(null)}
+          mode="view"
+          ride={selectedRide}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 overflow-y-auto pb-24 bg-white flex flex-col relative">
@@ -78,20 +94,35 @@ export default function Rides({ onFindRide }: RidesProps) {
         ) : (
           <div className="space-y-4">
             {rides.map(ride => (
-              <div key={ride.id_ride} className="border border-gray-200 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div 
+                key={ride.id_ride} 
+                onClick={() => setSelectedRide(ride)}
+                className="border border-gray-200 rounded-[24px] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              >
                 <div className="flex justify-between items-center mb-3">
                   <div className="bg-green-100 text-[#008f55] text-xs font-bold px-3 py-1 rounded-full">Sắp khởi hành</div>
                   <div className="text-gray-500 text-xs">Mã chuyến: {ride.id_ride.toString().substring(0, 8)}...</div>
                 </div>
 
-                {ride.pickup_location && (
+                {(ride.Diem_don || ride.pickup_location) && (
                   <div className="flex items-start gap-3 mt-3 mb-2">
                     <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-gray-900">{ride.pickup_location.name}</div>
-                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{ride.pickup_location.address}</div>
+                      <div className="text-sm font-semibold text-gray-900">Điểm đón: {(ride.Diem_don || ride.pickup_location).name || 'Đang cập nhật'}</div>
+                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{(ride.Diem_don || ride.pickup_location).address}</div>
+                    </div>
+                  </div>
+                )}
+                {ride.Diem_den && (
+                  <div className="flex items-start gap-3 mt-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                       <MapPin className="w-3.5 h-3.5 text-red-600" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">Điểm đến: {ride.Diem_den.name || 'Đang cập nhật'}</div>
+                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{ride.Diem_den.address}</div>
                     </div>
                   </div>
                 )}

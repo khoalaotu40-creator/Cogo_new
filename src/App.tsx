@@ -1,6 +1,6 @@
 "use client"
-import { useState, useEffect } from 'react';
-import { Search, Users, Car, Wallet, Leaf, Building2, ChevronRight, Home as HomeIcon, MessageCircle, User, Settings as SettingsIcon, Plus, List } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Users, Car, Wallet, Leaf, Building2, ChevronRight, Home as HomeIcon, MessageCircle, User, Settings as SettingsIcon, Plus, List, Bell } from 'lucide-react';
 import Rides from './components/Rides';
 import FindRideForm from './components/FindRideForm';
 import Login from './components/Login';
@@ -8,10 +8,29 @@ import Profile from './components/Profile';
 import Settings from './components/Settings';
 import Feed from './components/Feed';
 import AvailableRides from './components/AvailableRides';
+import DriverRegistration from './components/DriverRegistration';
+import Notifications from './components/Notifications';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('login');
   const [previousTab, setPreviousTab] = useState('login');
+  const [isSos, setIsSos] = useState(false);
+  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const startPress = () => {
+    pressTimer.current = setTimeout(() => {
+      setIsSos(true);
+    }, 1000); // 1 second long press
+  };
+
+  const cancelPress = () => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+    setIsSos(false);
+  };
+
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem('cogo_user');
@@ -51,6 +70,14 @@ export default function Home() {
           <span className="text-[20px] font-bold text-[#008f55] tracking-tight">Cogo</span>
         </div>
         <div className="flex items-center gap-4">
+          <button className="text-[#008f55] hover:opacity-80 transition-opacity relative">
+            <MessageCircle className="w-[22px] h-[22px] stroke-[2]" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white">2</span>
+          </button>
+          <button onClick={() => navigateTo('notifications')} className="text-[#008f55] hover:opacity-80 transition-opacity relative">
+            <Bell className="w-[22px] h-[22px] stroke-[2]" />
+            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+          </button>
           <button onClick={() => navigateTo('rides')} className="text-[#008f55] hover:opacity-80 transition-opacity">
             <List className="w-[22px] h-[22px] stroke-[2]" />
           </button>
@@ -75,10 +102,17 @@ export default function Home() {
         {activeTab === 'rides' && <Rides onFindRide={() => navigateTo('find-ride')} />}
         {activeTab === 'find-ride' && <FindRideForm onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('rides')} />}
         {activeTab === 'profile' && <Profile />}
-        {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} />}
+        {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} onNavigateToProfile={() => navigateTo('profile')} onRegisterDriver={() => navigateTo('driver-registration')} />}
+        {activeTab === 'driver-registration' && <DriverRegistration onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('settings')} />}
+        {activeTab === 'notifications' && (
+          <Notifications 
+            onBack={() => setActiveTab(previousTab)} 
+            currentUser={localStorage.getItem('cogo_user') ? JSON.parse(localStorage.getItem('cogo_user') as string) : null}
+          />
+        )}
 
         {/* Bottom Navigation */}
-        {activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && (
+        {activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && activeTab !== 'driver-registration' && activeTab !== 'notifications' && (
           <div className="absolute bottom-0 w-full bg-white flex items-center justify-between px-12 pt-3 pb-6 sm:pb-4 border-t border-gray-100 z-50">
             <button 
               onClick={() => navigateTo('home')}
@@ -90,10 +124,23 @@ export default function Home() {
             
             <div className="relative -mt-6 flex justify-center">
               <button 
-                onClick={() => navigateTo('find-ride')}
-                className="w-12 h-12 bg-[#008f55] rounded-full flex items-center justify-center shadow-lg hover:bg-[#007a48] transition-colors"
+                onClick={() => {
+                  if (!isSos) navigateTo('find-ride');
+                }}
+                onPointerDown={startPress}
+                onPointerUp={cancelPress}
+                onPointerLeave={cancelPress}
+                className={`flex items-center justify-center shadow-lg transition-all duration-300 ${
+                  isSos 
+                    ? 'w-24 h-24 bg-red-600 rounded-full scale-110 animate-pulse -mt-4 shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
+                    : 'w-12 h-12 bg-[#008f55] rounded-full hover:bg-[#007a48]'
+                }`}
               >
-                <Plus className="w-7 h-7 text-white stroke-[3]" />
+                {isSos ? (
+                  <span className="font-bold text-white text-2xl tracking-wider">SOS</span>
+                ) : (
+                  <Plus className="w-7 h-7 text-white stroke-[3]" />
+                )}
               </button>
             </div>
 

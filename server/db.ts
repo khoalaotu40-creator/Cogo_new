@@ -33,6 +33,17 @@ export const initDb = async () => {
         id_user UUID REFERENCES users(id) ON DELETE CASCADE,
         id_vehicle UUID REFERENCES vehicles(id_vehicle) ON DELETE SET NULL
       );
+      CREATE TABLE IF NOT EXISTS post_requests (
+        request_id SERIAL PRIMARY KEY,
+        post_id INT REFERENCES posts(post_id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        message TEXT,
+        requested_seats INT DEFAULT 1,
+        pickup_point JSONB,
+        dropoff_point JSONB
+      );
     `);
     console.log('Database tables initialized.');
   } catch (error) {

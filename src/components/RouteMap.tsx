@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { ArrowLeft, Clock, MapPin } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Car } from 'lucide-react';
 import type { Location } from '../../lib/api';
 
 // Fix leaflet icon issue
@@ -17,7 +17,8 @@ interface RouteMapProps {
   pickupLocation: Location;
   dropoffLocation: Location;
   onBack: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
+  mode?: 'create' | 'view';
 }
 
 // Component to adjust map view to fit bounds
@@ -31,7 +32,7 @@ function ChangeView({ bounds }: { bounds: L.LatLngBounds }) {
   return null;
 }
 
-export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onConfirm }: RouteMapProps) {
+export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onConfirm, mode = 'create', ride }: RouteMapProps) {
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [distance, setDistance] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
@@ -142,6 +143,13 @@ export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onCo
       <div className="bg-white rounded-t-[32px] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] p-6 z-[1000] relative mt-[-20px]">
         <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
         
+        {mode === 'view' && ride && (
+          <div className="flex justify-between items-center mb-4">
+            <div className="bg-green-100 text-[#008f55] text-xs font-bold px-3 py-1 rounded-full">Sắp khởi hành</div>
+            <div className="text-gray-500 text-xs">Mã chuyến: {ride.id_ride?.toString().substring(0, 8)}...</div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900">Chi tiết lộ trình</h2>
           <div className="flex gap-4">
@@ -182,20 +190,36 @@ export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onCo
           </div>
         </div>
 
-        <button 
-          onClick={async () => {
-            setIsConfirming(true);
-            try {
-              await onConfirm();
-            } finally {
-              setIsConfirming(false);
-            }
-          }}
-          disabled={isConfirming}
-          className="w-full bg-[#008f55] text-white font-bold text-[16px] py-3.5 rounded-full shadow-md hover:bg-[#00824d] transition-colors disabled:opacity-70 flex items-center justify-center"
-        >
-          {isConfirming ? "Đang xử lý..." : "Xác nhận tạo chuyến"}
-        </button>
+        {mode === 'create' && (
+          <button 
+            onClick={async () => {
+              setIsConfirming(true);
+              try {
+                if (onConfirm) await onConfirm();
+              } finally {
+                setIsConfirming(false);
+              }
+            }}
+            disabled={isConfirming}
+            className="w-full bg-[#008f55] text-white font-bold text-[16px] py-3.5 rounded-full shadow-md hover:bg-[#00824d] transition-colors disabled:opacity-70 flex items-center justify-center"
+          >
+            {isConfirming ? "Đang xử lý..." : "Xác nhận tạo chuyến"}
+          </button>
+        )}
+        {mode === 'view' && (
+          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Car className="w-5 h-5 text-gray-600" />
+              <span className="font-medium text-gray-800">Chờ ghép xe</span>
+            </div>
+            <button 
+              onClick={onBack}
+              className="w-full bg-[#f4f6fc] text-[#4a5568] font-bold text-[16px] py-3.5 rounded-full shadow-sm hover:bg-[#eef1f8] transition-colors flex items-center justify-center"
+            >
+              Trở về
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

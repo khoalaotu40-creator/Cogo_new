@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { ThumbsUp, MessageSquare, MoreHorizontal, Zap } from 'lucide-react';
+import { ThumbsUp, MessageSquare, MoreHorizontal, Zap, MapPin, Navigation, Car, Clock, Loader2 } from 'lucide-react';
+import JoinRequestModal from './JoinRequestModal';
 
 interface Post {
   id: number;
@@ -29,25 +30,45 @@ export default function Feed({ onStart }: FeedProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  
+  // Tracking join requests locally for demo
+  const [joinStatus, setJoinStatus] = useState<Record<number, 'pending' | 'joined'>>({});
+  
+  // Modal state
+  const [joiningPost, setJoiningPost] = useState<Post | null>(null);
 
   useEffect(() => {
-    const userStr = localStorage.getItem('cogo_user');
-    if (userStr) {
-      setCurrentUser(JSON.parse(userStr));
-    }
-
-    const fetchPosts = async () => {
+    const fetchPostsAndRequests = async (user: any) => {
       try {
         const data = await api.posts.getAll();
         setPosts(data);
+        
+        if (user) {
+          const userId = user.id || user.id_user;
+          if (userId) {
+            const requests = await api.posts.getUserRequests(userId);
+            const statusMap: Record<number, 'pending' | 'joined'> = {};
+            requests.forEach((req: any) => {
+              statusMap[req.post_id] = req.status;
+            });
+            setJoinStatus(statusMap);
+          }
+        }
       } catch (error) {
-        console.error("Failed to fetch posts", error);
+        console.error("Failed to fetch posts or requests", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPosts();
+    let user = null;
+    const userStr = localStorage.getItem('cogo_user');
+    if (userStr) {
+      user = JSON.parse(userStr);
+      setCurrentUser(user);
+    }
+    
+    fetchPostsAndRequests(user);
   }, []);
 
   const formatTimeAgo = (dateString: string) => {
@@ -63,15 +84,29 @@ export default function Feed({ onStart }: FeedProps) {
     return `${diffDays} ngày trước`;
   };
 
+  const handleJoinSuccess = (postId: number) => {
+    setJoinStatus(prev => ({ ...prev, [postId]: 'pending' }));
+    setJoiningPost(null);
+  };
+
   return (
-    <div className="flex flex-col pb-[80px]">
+    <div className="flex flex-col pb-[80px] relative">
+      {/* Join Request Modal */}
+      {joiningPost && (
+        <JoinRequestModal
+          post={joiningPost}
+          currentUser={currentUser}
+          onClose={() => setJoiningPost(null)}
+          onSuccess={handleJoinSuccess}
+        />
+      )}
+
       {/* Quick matching banner */}
       <div className="bg-white p-4 flex items-center gap-3 border-b border-gray-100">
         <div className="flex-1">
           <div className="text-[17px] font-bold text-[#1a2b4b] leading-tight mb-0.5">Ghép nhanh đi ngay</div>
           <div className="text-[13px] text-gray-500 leading-tight pr-2">Tìm chuyến đi phù hợp nhất với bạn</div>
         </div>
-
         <button 
           onClick={onStart}
           className="shrink-0 bg-[#006b3f] hover:bg-[#005a35] text-white px-4 py-2.5 rounded-[12px] font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
@@ -84,7 +119,10 @@ export default function Feed({ onStart }: FeedProps) {
       <div className="h-2 bg-gray-100 w-full"></div>
 
       {loading ? (
-        <div className="p-8 text-center text-gray-500 text-sm">Đang tải bảng tin...</div>
+        <div className="p-8 text-center text-gray-500 text-sm flex flex-col items-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#006b3f] mb-2" />
+          Đang tải bảng tin...
+        </div>
       ) : posts.length === 0 ? (
         <div className="p-8 text-center text-gray-500 text-sm">Chưa có bài đăng nào.</div>
       ) : (
@@ -179,9 +217,30 @@ export default function Feed({ onStart }: FeedProps) {
                   <span className="text-[14px] font-medium">Bình luận</span>
                 </button>
               </div>
-              <button className="bg-[#006b3f] hover:bg-[#005a35] text-white text-[14px] font-semibold px-4 py-1.5 rounded-lg transition-colors">
-                Tham gia
-              </button>
+              
+              {joinStatus[post.id] === 'pending' ? (
+                <button 
+                  disabled
+                  className="bg-gray-200 text-gray-600 text-[14px] font-semibold px-4 py-1.5 rounded-lg flex items-center gap-1.5"
+                >
+                  <Clock className="w-4 h-4" />
+                  Đang chờ duyệt
+                </button>
+              ) : joinStatus[post.id] === 'accepted' || joinStatus[post.id] === 'joined' ? (
+                <button 
+                  disabled
+                  className="bg-green-100 text-green-700 text-[14px] font-semibold px-4 py-1.5 rounded-lg flex items-center gap-1.5"
+                >
+                  Đã tham gia
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setJoiningPost(post)}
+                  className="bg-[#006b3f] hover:bg-[#005a35] text-white text-[14px] font-semibold px-4 py-1.5 rounded-lg transition-colors"
+                >
+                  Tham gia
+                </button>
+              )}
             </div>
             
             <div className="h-2 bg-gray-100 w-full mt-3"></div>

@@ -3,10 +3,10 @@ import pool from "../db";
 
 const router = Router();
 
-// Update user profile (avatar, background)
+// Update user profile (avatar, background, driver_id)
 router.put("/:id", async (req, res) => {
   const userId = req.params.id;
-  const { avatar_url, background_url } = req.body;
+  const { avatar_url, background_url, driver_id } = req.body;
 
   try {
     let updateQuery = "UPDATE users SET ";
@@ -22,6 +22,12 @@ router.put("/:id", async (req, res) => {
     if (background_url !== undefined) {
       updateQuery += `background_url = $${valueIndex}, `;
       values.push(background_url);
+      valueIndex++;
+    }
+
+    if (driver_id !== undefined) {
+      updateQuery += `driver_id = $${valueIndex}, `;
+      values.push(driver_id);
       valueIndex++;
     }
     
