@@ -28,22 +28,26 @@ export default function DriverRegistration({ onBack, onSuccess }: DriverRegistra
         const userStr = localStorage.getItem('cogo_user');
         if (userStr) {
           const user = JSON.parse(userStr);
-          const userId = user.id || user.id_user;
-          const randomDriverId = userId; // Use id_user from users table
+          const userId = user.id_user || user.id;
+          const driverId = user.id_user;
           
-          const updatedUser = await api.users.update(userId.toString(), {
-            driver_id: randomDriverId
+          if (!driverId) {
+             throw new Error("Missing id_user in user profile. Please login again.");
+          }
+          
+          const updatedUser = await api.users.update(driverId.toString(), {
+            driver_id: driverId
           });
           
-          localStorage.setItem('cogo_user', JSON.stringify({ ...user, driver_id: randomDriverId }));
+          localStorage.setItem('cogo_user', JSON.stringify({ ...user, driver_id: driverId, id_user: driverId }));
           showToast('Đăng ký lái xe thành công!', 'success');
         }
         setTimeout(() => {
             onSuccess();
         }, 1500); // delay success callback to allow user to see toast
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error registering driver:', error);
-        showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+        showToast(`Có lỗi xảy ra: ${error.message || 'vui lòng thử lại'}`, 'error');
       } finally {
         setLoading(false);
       }

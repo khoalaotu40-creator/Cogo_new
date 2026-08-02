@@ -167,9 +167,14 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
         let isAccepted = false;
         while (!isAccepted) {
             await new Promise(resolve => setTimeout(resolve, 3000));
-            const statusRes = await api.rides.getStatus(rideId);
-            if (statusRes.id_vehicle !== null) {
-                isAccepted = true;
+            try {
+                const statusRes = await api.rides.getStatus(rideId);
+                if (statusRes && statusRes.id_vehicle !== null) {
+                    isAccepted = true;
+                }
+            } catch (err: any) {
+                console.warn(`[FindRideForm] Status poll warning for ride ${rideId}:`, err.message || err);
+                // continue polling
             }
         }
         

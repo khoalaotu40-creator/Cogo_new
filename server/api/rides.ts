@@ -135,14 +135,19 @@ router.post('/accept', async (req, res) => {
 router.get('/status/:rideId', async (req, res) => {
   try {
     const { rideId } = req.params;
+    if (!rideId || rideId === 'undefined' || isNaN(Number(rideId))) {
+       console.error(`[API] /status/:rideId - Invalid rideId: ${rideId}`);
+       return res.status(400).json({ error: 'Invalid ride ID' });
+    }
     const result = await pool.query('SELECT status, id_vehicle FROM rides WHERE id_ride = $1', [rideId]);
     if (result.rows.length === 0) {
+      console.warn(`[API] /status/:rideId - Ride not found: ${rideId}`);
       return res.status(404).json({ error: 'Ride not found' });
     }
     res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Get ride status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error: any) {
+    console.error(`[API] /status/:rideId - Get ride status error for ID ${req.params.rideId}:`, error.message || error);
+    res.status(500).json({ error: 'Internal server error', details: error.message || String(error) });
   }
 });
 
@@ -183,6 +188,10 @@ router.post('/pickup', async (req, res) => {
 router.get('/tracking/:rideId', async (req, res) => {
   try {
     const { rideId } = req.params;
+    if (!rideId || rideId === 'undefined' || isNaN(Number(rideId))) {
+       console.error(`[API] /tracking/:rideId - Invalid rideId: ${rideId}`);
+       return res.status(400).json({ error: 'Invalid ride ID' });
+    }
     const result = await pool.query(`
       SELECT 
         r.id_ride,

@@ -23,7 +23,7 @@ L.Icon.Default.mergeOptions({
 
 export default function DriverHome({ onBack }: { onBack?: () => void }) {
   const currentUser = JSON.parse(localStorage.getItem('cogo_user') || '{}');
-  const driverId = currentUser?.driver_id;
+  const driverId = currentUser?.id_user || currentUser?.driver_id;
   const [currentTab, setCurrentTab] = useState<'home' | 'earnings'>('home');
   const [showVehicleRegistration, setShowVehicleRegistration] = useState(false);
   const [isOnline, setIsOnline] = useState(false);

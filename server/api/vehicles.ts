@@ -26,9 +26,9 @@ router.post('/location', async (req, res) => {
     `, [locationData, driver_id]);
     
     res.json({ status: 'ok', data: result.rows[0] });
-  } catch (err) {
-    console.error('Update location error:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to update location' });
+  } catch (err: any) {
+    console.error('Update location error:', err.message || err);
+    res.status(500).json({ status: 'error', message: 'Failed to update location', details: err.message || String(err) });
   }
 });
 
@@ -44,9 +44,9 @@ router.get('/', async (req, res) => {
     `, [driverId]);
     
     res.json({ status: 'ok', data: result.rows });
-  } catch (err) {
-    console.error('Get vehicles error:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to fetch vehicles' });
+  } catch (err: any) {
+    console.error('Get vehicles error:', err.message || err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch vehicles', details: err.message || String(err) });
   }
 });
 
@@ -80,9 +80,9 @@ router.post('/register', async (req, res) => {
     }
     
     res.json({ status: 'ok', data: result.rows[0] });
-  } catch (err) {
-    console.error('Register vehicle error:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to register vehicle' });
+  } catch (err: any) {
+    console.error('Register vehicle error:', err.message || err);
+    res.status(500).json({ status: 'error', message: 'Failed to register vehicle', details: err.message || String(err) });
   }
 });
 

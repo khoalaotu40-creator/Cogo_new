@@ -48,9 +48,9 @@ router.put("/:id", async (req, res) => {
     }
     
     res.json(rows[0]);
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ error: "Internal server error" });
+  } catch (error: any) {
+    console.error("Error updating user:", error.message || error);
+    res.status(500).json({ error: "Internal server error", details: error.message || String(error) });
   }
 });
 

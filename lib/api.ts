@@ -46,7 +46,10 @@ export const api = {
         body: JSON.stringify({ userId, pickupLocation, dropoffLocation, typeRide })
       });
       if (!response.ok) {
-        throw new Error(`Failed to create ride: ${response.status}`);
+        let errorText = '';
+        try { errorText = await response.text(); } catch (e) {}
+        console.error(`[API] create ride failed with status ${response.status}:`, errorText);
+        throw new Error(`Failed to create ride: ${response.status}. Details: ${errorText}`);
       }
       return response.json();
     },
@@ -68,7 +71,10 @@ export const api = {
     getStatus: async (rideId: string) => {
       const response = await fetch(`/api/rides/status/${rideId}`);
       if (!response.ok) {
-        throw new Error(`Failed to fetch ride status: ${response.status}`);
+        let errorText = '';
+        try { errorText = await response.text(); } catch (e) {}
+        console.error(`[API] getStatus(${rideId}) failed with status ${response.status}:`, errorText);
+        throw new Error(`Failed to fetch ride status: ${response.status}. Details: ${errorText}`);
       }
       return response.json();
     },

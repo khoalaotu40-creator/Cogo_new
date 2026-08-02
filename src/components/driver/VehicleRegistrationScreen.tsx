@@ -32,14 +32,19 @@ export function VehicleRegistrationScreen({ onBack, onSuccess }: VehicleRegistra
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          driver_id: JSON.parse(localStorage.getItem('cogo_user') || '{}')?.driver_id,
+          driver_id: JSON.parse(localStorage.getItem('cogo_user') || '{}')?.id_user,
           type_vehicle,
           name_vehicle
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to register vehicle');
+        let errStr = '';
+        try {
+          const errData = await response.json();
+          errStr = errData.details || errData.message || '';
+        } catch(e) {}
+        throw new Error(`Failed to register vehicle: ${errStr}`);
       }
 
       alert("Đăng ký phương tiện thành công!");
