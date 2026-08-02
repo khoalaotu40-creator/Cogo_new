@@ -109,6 +109,35 @@ router.post('/accept', async (req, res) => {
     // Update ride with vehicle ID
     await pool.query('UPDATE rides SET id_vehicle = $1, status = $2 WHERE id_ride = $3', [actualVehicleId, 'Arriving', id_ride]);
     
+    // Get ride details for creating trip
+    const rideDetails = await pool.query('SELECT * FROM rides WHERE id_ride = $1', [id_ride]);
+    const rideData = rideDetails.rows[0];
+    
+    if (rideData) {
+      // Calculate a simple distance/kigo based on mock or logic, 
+      // here we just use 0 or some base value since we don't have matrix_c_value calculation yet
+      const distance = 5.5; // mock distance
+      const totalKigo = 50; // mock kigo cost
+      
+      // Create a trip record
+      const tripResult = await pool.query(
+        `INSERT INTO trips (id_vehicle, id_ride, matrix_c_value, total_distance_km, total_kigo, status, user_id) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_trip`,
+        [actualVehicleId, id_ride, 1.0, distance, totalKigo, 'active', rideData.id_user]
+      );
+      
+      if (tripResult.rows.length > 0) {
+        const tripId = tripResult.rows[0].id_trip;
+        
+        // Create an initial trip segment
+        await pool.query(
+          `INSERT INTO trip_segments (id_trip, segment_order, distance_km, occupants_count, kigo_cost)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [tripId, 1, distance, 1, totalKigo]
+        );
+      }
+    }
+    
     // Get user and vehicle locations
     const rideInfo = await pool.query(`
       SELECT 
@@ -169,8 +198,61 @@ router.post('/complete', async (req, res) => {
     // Update ride status to Completed
     await pool.query('UPDATE rides SET status = $1 WHERE id_ride = $2', ['Completed', id_ride]);
     
+    // Update trip status and generate transaction
+    const tripRes = await pool.query('SELECT * FROM trips WHERE id_ride = $1', [id_ride]);
+    const trip = tripRes.rows[0];
+    
+    if (trip) {
+      await pool.query('UPDATE trips SET status = $1 WHERE id_trip = $2', ['completed', trip.id_trip]);
+      
+      // Get driver user_id from vehicle
+      const vehicleRes = await pool.query('SELECT id_user FROM vehicles WHERE id_vehicle = $1', [trip.id_vehicle]);
+      const driverUserId = vehicleRes.rows[0]?.id_user;
+      
+      const passengerId = trip.user_id;
+      
+      if (passengerId && driverUserId) {
+        // Find wallets
+        const pWalletRes = await pool.query('SELECT id_wallet FROM wallets WHERE id_user = $1 LIMIT 1', [passengerId]);
+        const dWalletRes = await pool.query('SELECT id_wallet FROM wallets WHERE id_user = $1 LIMIT 1', [driverUserId]);
+        
+        let pWalletId = pWalletRes.rows[0]?.id_wallet;
+        let dWalletId = dWalletRes.rows[0]?.id_wallet;
+        
+        // Auto create wallets if missing for demo
+        if (!pWalletId) {
+          const nw = await pool.query('INSERT INTO wallets (id_user, wallet_type, balance_kigo) VALUES ($1, $2, $3) RETURNING id_wallet', [passengerId, 'passenger', 1000]);
+          pWalletId = nw.rows[0].id_wallet;
+        }
+        if (!dWalletId) {
+          const nw = await pool.query('INSERT INTO wallets (id_user, wallet_type, balance_kigo) VALUES ($1, $2, $3) RETURNING id_wallet', [driverUserId, 'driver', 0]);
+          dWalletId = nw.rows[0].id_wallet;
+        }
+        
+        // Process transaction
+        if (pWalletId && dWalletId) {
+          const amount = trip.total_kigo || 50;
+          
+          await pool.query('BEGIN');
+          // insert transaction
+          await pool.query(
+            `INSERT INTO transactions (id_trip, from_wallet_id, to_wallet_id, amount_kigo, tx_type, status)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [trip.id_trip, pWalletId, dWalletId, amount, 'ride_payment', 'completed']
+          );
+          
+          // update wallets
+          await pool.query('UPDATE wallets SET balance_kigo = balance_kigo - $1 WHERE id_wallet = $2', [amount, pWalletId]);
+          await pool.query('UPDATE wallets SET balance_kigo = balance_kigo + $1 WHERE id_wallet = $2', [amount, dWalletId]);
+          
+          await pool.query('COMMIT');
+        }
+      }
+    }
+    
     res.json({ status: 'ok', message: 'Ride completed successfully' });
   } catch (err) {
+    await pool.query('ROLLBACK');
     console.error('Complete ride error:', err);
     res.status(500).json({ status: 'error', message: 'Failed to complete ride' });
   }

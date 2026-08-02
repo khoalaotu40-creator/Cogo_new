@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 async function run() {
-  const tables = ['trips', 'trip_segments', 'transactions', 'wallets'];
+  const tables = ['trips', 'trip_segments', 'transactions', 'wallets', 'users'];
   for (const table of tables) {
     const res = await pool.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${table}'`);
     console.log(`Table ${table}:`);

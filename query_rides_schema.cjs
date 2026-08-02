@@ -9,8 +9,12 @@ const pool = new Pool({
 });
 
 async function run() {
-  const res = await pool.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'rides';");
-  console.log(res.rows);
+  const tables = ['rides', 'users', 'vehicles'];
+  for (const table of tables) {
+    const res = await pool.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${table}'`);
+    console.log(`Table ${table}:`);
+    console.log(res.rows);
+  }
   process.exit(0);
 }
 run();
