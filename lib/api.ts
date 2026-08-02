@@ -58,6 +58,13 @@ export const api = {
       return response.json();
     },
     
+        getTracking: async (rideId: string) => {
+      const response = await fetch(`/api/rides/tracking/${rideId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tracking info: ${response.status}`);
+      }
+      return response.json();
+    },
     getStatus: async (rideId: string) => {
       const response = await fetch(`/api/rides/status/${rideId}`);
       if (!response.ok) {

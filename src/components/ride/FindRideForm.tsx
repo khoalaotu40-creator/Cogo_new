@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, MapPin, Calendar, Repeat, Car, Bike, Plus, Navigation, Clock, Loader2, ArrowLeft, Zap, Users, UserPlus } from 'lucide-react';
 import { api, Location } from '../../../lib/api';
 import RouteMap from './RouteMap';
+import RideTracking from './RideTracking';
 
 interface FindRideFormProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
   const [rideType, setRideType] = useState<'now' | 'schedule' | null>(null);
   
   const [showRouteMap, setShowRouteMap] = useState(false);
+  const [trackedRideId, setTrackedRideId] = useState<string | null>(null);
   const [repeat, setRepeat] = useState('Thứ 2 - 6');
   const [seats, setSeats] = useState(1);
   const [vehicleType, setVehicleType] = useState<'motorbike' | 'car'>('motorbike');
@@ -543,9 +545,13 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
     </div>
   );
 
+  if (trackedRideId) {
+    return <RideTracking rideId={trackedRideId} onBack={() => onSuccess('now')} />;
+  }
+
   if (showRouteMap && pickupLocation && dropoffLocation) {
     return (
-      <RouteMap 
+      <RouteMap
         pickupLocation={pickupLocation} 
         dropoffLocation={dropoffLocation} 
         onBack={() => setShowRouteMap(false)} 
