@@ -1,5 +1,5 @@
 import { Loader2, Car, Navigation, Phone } from 'lucide-react';
-import { Ride } from '../types';
+import { Ride } from '../../types';
 
 interface OnlineRidesListProps {
   isLoadingRides: boolean;

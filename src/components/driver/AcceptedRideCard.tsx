@@ -1,5 +1,5 @@
 import { CheckCircle2, Phone } from 'lucide-react';
-import { AcceptedRideData } from '../types';
+import { AcceptedRideData } from '../../types';
 
 interface AcceptedRideCardProps {
   acceptedRideData: AcceptedRideData;

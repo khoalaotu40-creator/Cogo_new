@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import L from 'leaflet';
 import { Loader2, MapPin, Power } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
-import { AcceptedRideData } from '../types';
+import { AcceptedRideData } from '../../types';
 
 interface MapSectionProps {
   isOnline: boolean;

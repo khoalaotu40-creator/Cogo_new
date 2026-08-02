@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, MapPin, Calendar, Repeat, Car, Bike, Plus, Navigation, Clock, Loader2, ArrowLeft, Zap, Users, UserPlus } from 'lucide-react';
-import { api, Location } from '../../lib/api';
+import { api, Location } from '../../../lib/api';
 import RouteMap from './RouteMap';
 
 interface FindRideFormProps {
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (type?: string) => void;
 }
 
 export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
@@ -152,7 +152,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
         });
         await api.rides.create(userId, pickupLocation!, dropoffLocation!, `đặt lịch - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
         alert('Đã tạo chuyến đi và bài đăng thành công!');
-        onSuccess();
+        onSuccess('schedule');
       } else {
         const response = await api.rides.create(userId, pickupLocation!, dropoffLocation!, `đi ngay - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
         const rideId = response.ride?.id_ride;
@@ -519,9 +519,13 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
 
       <div className="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-100 z-20">
         <button 
-          onClick={() => {
+          onClick={async () => {
             if (pickupLocation && dropoffLocation) {
-              setShowRouteMap(true);
+              if (rideType === 'schedule') {
+                await handleCreateRide();
+              } else {
+                setShowRouteMap(true);
+              }
             } else {
               alert('Vui lòng chọn đầy đủ điểm đón và điểm đến');
             }
@@ -531,7 +535,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
           {rideType === 'now' ? 'Tiếp tục' : (
              <>
                <Navigation className="w-5 h-5 -rotate-90" />
-               Tìm chuyến phù hợp
+               Đăng bài
              </>
           )}
         </button>

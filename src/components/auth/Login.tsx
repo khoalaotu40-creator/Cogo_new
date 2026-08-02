@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, GraduationCap, Building2, Loader2, Trash2, LogIn, UserPlus } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api } from '../../../lib/api';
 
 interface LoginProps {
   onLoginSuccess: (user: any) => void;

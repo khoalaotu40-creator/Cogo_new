@@ -1,16 +1,16 @@
 "use client"
 import { useState, useEffect, useRef } from 'react';
 import { Search, Users, Car, Wallet, Leaf, Building2, ChevronRight, Home as HomeIcon, MessageCircle, User, Settings as SettingsIcon, Plus, List, Bell } from 'lucide-react';
-import Rides from './components/Rides';
-import FindRideForm from './components/FindRideForm';
-import Login from './components/Login';
-import Profile from './components/Profile';
-import Settings from './components/Settings';
-import Feed from './components/Feed';
-import AvailableRides from './components/AvailableRides';
-import DriverRegistration from './components/DriverRegistration';
+import Rides from './components/ride/Rides';
+import FindRideForm from './components/ride/FindRideForm';
+import Login from './components/auth/Login';
+import Profile from './components/user/Profile';
+import Settings from './components/user/Settings';
+import Feed from './components/ride/Feed';
+import AvailableRides from './components/ride/AvailableRides';
+import DriverRegistration from './components/driver/DriverRegistration';
 import DriverHome from './components/driver/DriverHome';
-import Notifications from './components/Notifications';
+import Notifications from './components/user/Notifications';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('login');
@@ -107,7 +107,7 @@ export default function Home() {
         {activeTab === 'home' && renderHomeContent()}
         {activeTab === 'available-rides' && <AvailableRides onBack={() => setActiveTab(previousTab)} />}
         {activeTab === 'rides' && <Rides onFindRide={() => navigateTo('find-ride')} />}
-        {activeTab === 'find-ride' && <FindRideForm onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('rides')} />}
+        {activeTab === 'find-ride' && <FindRideForm onBack={() => setActiveTab(previousTab)} onSuccess={(type) => navigateTo(type === 'schedule' ? 'home' : 'rides')} />}
         {activeTab === 'profile' && <Profile />}
         {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} onNavigateToProfile={() => navigateTo('profile')} onRegisterDriver={() => navigateTo('driver-registration')} onSwitchToDriverMode={() => navigateTo('driver-home')} />}
         {activeTab === 'driver-home' && <DriverHome onBack={() => setActiveTab('settings')} />}

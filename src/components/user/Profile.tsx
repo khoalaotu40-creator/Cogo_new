@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Camera, Plus, Pencil, Briefcase, GraduationCap, Home, MapPin, Heart, MoreHorizontal, X, Loader2, Waypoints } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api } from '../../../lib/api';
 
 export default function Profile() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('cogo_user') || '{}'));

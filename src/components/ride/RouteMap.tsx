@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { ArrowLeft, Zap, Clock, MapPin, Car } from 'lucide-react';
-import type { Location } from '../../lib/api';
+import type { Location } from '../../../lib/api';
 
 // Fix leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
