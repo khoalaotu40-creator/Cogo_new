@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { ArrowLeft, Zap, Clock, MapPin, Car } from 'lucide-react';
-import type { Location } from '../../../lib/api';
+import type { Location } from '../../lib/api';
 
 // Fix leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -17,7 +17,7 @@ interface RouteMapProps {
   pickupLocation: Location;
   dropoffLocation: Location;
   onBack: () => void;
-  onConfirm?: () => void;
+  onConfirm?: (distance?: number) => void;
   mode?: 'create' | 'view';
   ride?: any;
 }
@@ -217,7 +217,7 @@ export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onCo
             onClick={async () => {
               setIsConfirming(true);
               try {
-                if (onConfirm) await onConfirm();
+                if (onConfirm) await onConfirm(distance !== null ? distance : undefined);
               } finally {
                 setIsConfirming(false);
               }

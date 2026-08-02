@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, Navigation, Car, Users, MapPin } from 'lucide-react';
-import { api, Location } from '../../../lib/api';
+import { api, Location } from '../../lib/api';
 
 interface Post {
   id: number;

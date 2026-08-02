@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Car, MapPin, Loader2 } from 'lucide-react';
-import { api } from '../../../lib/api';
+import { api } from '../../lib/api';
 import RouteMap from './RouteMap';
 
 interface RidesProps {

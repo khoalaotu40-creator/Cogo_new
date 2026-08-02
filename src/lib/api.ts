@@ -4,6 +4,7 @@ export interface Location {
   address?: string;
   lat?: number;
   lng?: number;
+  routeDistance?: number;
 }
 
 export const api = {

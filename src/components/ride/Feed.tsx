@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api, Location } from '../../../lib/api';
+import { api, Location } from '../../lib/api';
 import { ThumbsUp, MessageSquare, MoreHorizontal, Zap, MapPin, Navigation, Car, Clock, Loader2 } from 'lucide-react';
 import JoinRequestModal from './JoinRequestModal';
 import RouteMap from './RouteMap';

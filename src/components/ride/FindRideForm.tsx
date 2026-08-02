@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, MapPin, Calendar, Repeat, Car, Bike, Plus, Navigation, Clock, Loader2, ArrowLeft, Zap, Users, UserPlus } from 'lucide-react';
-import { api, Location } from '../../../lib/api';
+import { api, Location } from '../../lib/api';
 import RouteMap from './RouteMap';
 import RideTracking from './RideTracking';
 
@@ -129,7 +129,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
     }
   };
 
-  const handleCreateRide = async () => {
+  const handleCreateRide = async (distanceInMeters?: number) => {
     try {
       const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
       const userId = user.id || user.id_user;
@@ -142,21 +142,24 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
 
       if (rideType === 'schedule') {
         const content = `Tìm người đi chung lúc ${time}, ${date}. Lặp lại: ${repeat}. Cần ${seats} chỗ. Bằng ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}.`;
+        const postPickup = { ...pickupLocation!, routeDistance: distanceInMeters };
         await api.posts.create({
           user_id: userId,
           content: content,
           departure_point: pickupLocation?.name || pickup,
           destination_point: dropoffLocation?.name || dropoff,
-          pickup_location: pickupLocation,
+          pickup_location: postPickup,
           dropoff_location: dropoffLocation,
           ride_frequency: repeat,
           privacy: 'public'
         });
-        await api.rides.create(userId, pickupLocation!, dropoffLocation!, `đặt lịch - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
+        const finalPickup = { ...pickupLocation!, routeDistance: distanceInMeters };
+        await api.rides.create(userId, finalPickup, dropoffLocation!, `đặt lịch - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
         alert('Đã tạo chuyến đi và bài đăng thành công!');
         onSuccess('schedule');
       } else {
-        const response = await api.rides.create(userId, pickupLocation!, dropoffLocation!, `đi ngay - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
+        const finalPickup = { ...pickupLocation!, routeDistance: distanceInMeters };
+        const response = await api.rides.create(userId, finalPickup, dropoffLocation!, `đi ngay - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
         const rideId = response.ride?.id_ride;
         if (!rideId) {
             alert('Lỗi khởi tạo chuyến đi!');

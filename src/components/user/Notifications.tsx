@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Check, X, MapPin, Loader2, Navigation } from 'lucide-react';
-import { api } from '../../../lib/api';
+import { api } from '../../lib/api';
 
 interface NotificationProps {
   onBack: () => void;

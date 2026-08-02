@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Search, Star, MapPin, User, ChevronRight, Navigation } from 'lucide-react';
-import { api, Location } from '../../../lib/api';
+import { api, Location } from '../../lib/api';
 
 interface AvailableRidesProps {
   onBack: () => void;

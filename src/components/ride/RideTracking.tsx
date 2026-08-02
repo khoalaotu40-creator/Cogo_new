@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Car, Phone, MessageCircle, MapPin, Clock, Star, CheckCircle } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { api } from '../../../lib/api';
+import { api } from '../../lib/api';
 
 interface RideTrackingProps {
   rideId: string;

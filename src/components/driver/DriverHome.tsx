@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { ArrowLeft } from 'lucide-react';
 import { Ride, AcceptedRideData } from '../../types';
-import { api } from '../../../lib/api';
+import { api } from '../../lib/api';
 import { MapSection } from './MapSection';
 import { AcceptedRideCard } from './AcceptedRideCard';
 import { StatusCard } from './StatusCard';

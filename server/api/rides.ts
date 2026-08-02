@@ -1,7 +1,21 @@
 import { Router } from 'express';
 import pool from '../db';
 
+
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 const router = Router();
+
 
 // Create a new ride
 router.post('/', async (req, res) => {
@@ -114,10 +128,34 @@ router.post('/accept', async (req, res) => {
     const rideData = rideDetails.rows[0];
     
     if (rideData) {
-      // Calculate a simple distance/kigo based on mock or logic, 
-      // here we just use 0 or some base value since we don't have matrix_c_value calculation yet
-      const distance = 5.5; // mock distance
-      const totalKigo = 50; // mock kigo cost
+      // Calculate real distance using coordinates
+      let distance = 0;
+      try {
+        const rawDon = rideData.Diem_don || rideData.diem_don;
+        const rawDen = rideData.Diem_den || rideData.diem_den;
+        
+        let diemDon = typeof rawDon === 'string' ? JSON.parse(rawDon) : rawDon;
+        if (typeof diemDon === 'string') diemDon = JSON.parse(diemDon);
+        
+        let diemDen = typeof rawDen === 'string' ? JSON.parse(rawDen) : rawDen;
+        if (typeof diemDen === 'string') diemDen = JSON.parse(diemDen);
+        
+        if (diemDon && diemDon.routeDistance) {
+            distance = Number(diemDon.routeDistance) / 1000;
+            console.log("[RIDE ACCEPT] Using routeDistance from payload (km):", distance);
+        } else if (diemDon && diemDon.lat && diemDon.lng && diemDen && diemDen.lat && diemDen.lng) {
+          distance = getDistanceFromLatLonInKm(Number(diemDon.lat), Number(diemDon.lng), Number(diemDen.lat), Number(diemDen.lng));
+          console.log("[RIDE ACCEPT] Calculated straight-line distance fallback (km):", distance);
+        } else {
+          console.error("[RIDE ACCEPT] Missing lat/lng.", "diemDon:", diemDon, "diemDen:", diemDen);
+        }
+      } catch (e) {
+        console.error("[RIDE ACCEPT] Failed to parse Diem_don / Diem_den", e);
+      }
+      
+      // Calculate a basic cost: 10 kigo per km, minimum 10
+      const totalKigo = Math.max(10, Math.round(distance * 10));
+
       
       // Create a trip record
       const tripResult = await pool.query(

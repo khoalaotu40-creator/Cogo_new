@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Upload, ScanFace, CheckCircle2, AlertCircle } from 'lucide-react';
-import { api } from '../../../lib/api';
+import { api } from '../../lib/api';
 
 interface DriverRegistrationProps {
   onBack: () => void;
