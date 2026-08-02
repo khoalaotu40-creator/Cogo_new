@@ -9,8 +9,12 @@ const pool = new Pool({
 });
 
 async function run() {
-  const res = await pool.query(`SELECT id_ride, status, type_ride FROM rides ORDER BY id_ride DESC LIMIT 5`);
-  console.log(JSON.stringify(res.rows, null, 2));
+  const tables = ['trips', 'trip_segments', 'transactions', 'wallets'];
+  for (const table of tables) {
+    const res = await pool.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${table}'`);
+    console.log(`Table ${table}:`);
+    console.log(res.rows);
+  }
   process.exit(0);
 }
 run();

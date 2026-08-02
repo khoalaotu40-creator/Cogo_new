@@ -7,6 +7,10 @@ import ridesRouter from "./server/api/rides";
 import postsRouter from "./server/api/posts";
 import usersRouter from "./server/api/users";
 import vehiclesRouter from "./server/api/vehicles";
+import tripsRouter from "./server/api/trips";
+import tripSegmentsRouter from "./server/api/trip_segments";
+import transactionsRouter from "./server/api/transactions";
+import walletsRouter from "./server/api/wallets";
 import { initDb } from "./server/db";
 
 async function startServer() {
@@ -26,6 +30,10 @@ async function startServer() {
   app.use("/api/posts", postsRouter);
   app.use("/api/users", usersRouter);
   app.use("/api/vehicles", vehiclesRouter);
+  app.use("/api/trips", tripsRouter);
+  app.use("/api/trip-segments", tripSegmentsRouter);
+  app.use("/api/transactions", transactionsRouter);
+  app.use("/api/wallets", walletsRouter);
   
   // Health check
   app.get("/api/health", (req, res) => {
