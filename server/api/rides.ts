@@ -43,7 +43,7 @@ router.get('/available', async (req, res) => {
       `SELECT r.*, u.name as driver_name, u.avatar_url, u.phone
        FROM rides r
        JOIN users u ON r.id_user = u.id_user
-       WHERE r.type_ride = 'đi ngay' AND r.id_vehicle IS NULL
+       WHERE r.type_ride = 'đi ngay' AND r.id_vehicle IS NULL AND r.status = 'Requested'
        ORDER BY r.id_ride DESC`
     );
     res.json(result.rows);

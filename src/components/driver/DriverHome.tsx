@@ -28,6 +28,7 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
   const [isOnline, setIsOnline] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationText, setLocationText] = useState("");
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [rides, setRides] = useState<Ride[]>([]);
   const [isLoadingRides, setIsLoadingRides] = useState(false);
   const [acceptedRideData, setAcceptedRideData] = useState<any>(null);
@@ -118,6 +119,13 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
   }, [isOnline]);
 
   const handleToggleConnect = () => {
+    setConnectionError(null);
+    if (!isOnline && vehicles.length === 0) {
+      setConnectionError("Bạn cần đăng ký phương tiện trước khi bật kết nối!");
+      setTimeout(() => setConnectionError(null), 3000);
+      return;
+    }
+    
     if (isOnline) {
       setIsOnline(false);
       setLocationText("");
@@ -169,14 +177,16 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
             console.error("Lỗi lấy vị trí:", error);
             setLocationText("Không thể lấy vị trí hiện tại");
             setIsLocating(false);
-            setIsOnline(true);
+            setConnectionError("Lấy vị trí thất bại. Bật kết nối không thành công.");
+            setTimeout(() => setConnectionError(null), 3000);
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       } else {
         setLocationText("Trình duyệt không hỗ trợ định vị");
         setIsLocating(false);
-        setIsOnline(true);
+        setConnectionError("Trình duyệt không hỗ trợ định vị. Bật kết nối không thành công.");
+        setTimeout(() => setConnectionError(null), 3000);
       }
     }
   };
@@ -185,6 +195,24 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
     <div className="h-full bg-gray-100 flex items-center justify-center font-sans">
       <div className="w-full bg-[#F5F7F8] h-full relative overflow-hidden flex flex-col">
         
+        
+        {/* Connection Error Toast */}
+        {connectionError && (
+          <div className="absolute top-4 left-4 right-4 bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-lg z-[1000] flex items-center justify-between animate-fade-in-up">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span className="text-sm font-medium">{connectionError}</span>
+            </div>
+            <button onClick={() => setConnectionError(null)} className="text-red-500 hover:text-red-700">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* Scrollable Content Area */}
         {showVehicleRegistration ? (
           <VehicleRegistrationScreen 

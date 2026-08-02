@@ -15,6 +15,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
   const [showRouteMap, setShowRouteMap] = useState(false);
   const [repeat, setRepeat] = useState('Thứ 2 - 6');
   const [seats, setSeats] = useState(1);
+  const [vehicleType, setVehicleType] = useState<'motorbike' | 'car'>('motorbike');
   const [time, setTime] = useState('08:00 AM');
   const [date, setDate] = useState('Hôm nay,');
   
@@ -138,7 +139,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
       }
 
       if (rideType === 'schedule') {
-        const content = `Tìm người đi chung lúc ${time}, ${date}. Lặp lại: ${repeat}. Cần ${seats} chỗ.`;
+        const content = `Tìm người đi chung lúc ${time}, ${date}. Lặp lại: ${repeat}. Cần ${seats} chỗ. Bằng ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}.`;
         await api.posts.create({
           user_id: userId,
           content: content,
@@ -149,11 +150,11 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
           ride_frequency: repeat,
           privacy: 'public'
         });
-        await api.rides.create(userId, pickupLocation!, dropoffLocation!, 'đặt lịch');
+        await api.rides.create(userId, pickupLocation!, dropoffLocation!, `đặt lịch - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
         alert('Đã tạo chuyến đi và bài đăng thành công!');
         onSuccess();
       } else {
-        const response = await api.rides.create(userId, pickupLocation!, dropoffLocation!, 'đi ngay');
+        const response = await api.rides.create(userId, pickupLocation!, dropoffLocation!, `đi ngay - ${vehicleType === 'motorbike' ? 'xe máy' : 'ô tô'}`);
         const rideId = response.ride?.id_ride;
         if (!rideId) {
             alert('Lỗi khởi tạo chuyến đi!');
@@ -427,6 +428,32 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
     );
   };
 
+  
+  const renderVehicleSelection = () => {
+    return (
+      <div className="mt-8">
+        <h2 className="text-[18px] font-bold text-gray-900 mb-1">Phương tiện</h2>
+        <p className="text-[14px] text-gray-500 mb-4">Bạn muốn di chuyển bằng phương tiện gì?</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button 
+            onClick={() => setVehicleType('motorbike')}
+            className={`flex flex-col items-center justify-center py-6 rounded-[16px] border transition-colors ${vehicleType === 'motorbike' ? 'bg-[#b6e8d1] border-[#008f55]' : 'bg-white border-gray-200'}`}
+          >
+            <Bike className={`w-8 h-8 mb-2 ${vehicleType === 'motorbike' ? 'text-[#005e38]' : 'text-gray-700'}`} />
+            <span className={`text-[15px] font-semibold ${vehicleType === 'motorbike' ? 'text-[#005e38]' : 'text-gray-900'}`}>Xe máy</span>
+          </button>
+          <button 
+            onClick={() => setVehicleType('car')}
+            className={`flex flex-col items-center justify-center py-6 rounded-[16px] border transition-colors ${vehicleType === 'car' ? 'bg-[#b6e8d1] border-[#008f55]' : 'bg-white border-gray-200'}`}
+          >
+            <Car className={`w-8 h-8 mb-2 ${vehicleType === 'car' ? 'text-[#005e38]' : 'text-gray-700'}`} />
+            <span className={`text-[15px] font-semibold ${vehicleType === 'car' ? 'text-[#005e38]' : 'text-gray-900'}`}>Ô tô</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderStep3 = () => (
     <div className="flex-1 overflow-y-auto bg-[#f8f9fa] flex flex-col relative h-full pb-20">
       <div className="flex items-center px-4 py-4 sticky top-0 bg-[#f8f9fa] z-20">
@@ -486,6 +513,7 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
           <h2 className="text-[18px] font-bold text-gray-900 mb-1">Số chỗ bạn cần là bao nhiêu?</h2>
           <p className="text-[14px] text-gray-500">Vui lòng chọn số lượng hành khách cho chuyến đi này.</p>
           {renderSeatSelection()}
+          {renderVehicleSelection()}
         </div>
       </div>
 
