@@ -1,5 +1,6 @@
 export interface Ride {
   id_ride: string;
+  status: string;
   phone: string;
   location: {
     address: string;
@@ -11,6 +12,7 @@ export interface Ride {
 
 export interface AcceptedRideData {
   id_ride: string;
+  status: string;
   phone: string;
   user_location: {
     lat: number;
@@ -18,6 +20,8 @@ export interface AcceptedRideData {
     name?: string;
     address?: string;
   };
+  Diem_don?: any;
+  Diem_den?: any;
   vehicle_location: {
     latitude: number;
     longitude: number;

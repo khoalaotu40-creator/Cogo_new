@@ -43,7 +43,7 @@ router.get('/available', async (req, res) => {
       `SELECT r.*, u.name as driver_name, u.avatar_url, u.phone
        FROM rides r
        JOIN users u ON r.id_user = u.id_user
-       WHERE r.type_ride = 'đi ngay' AND r.id_vehicle IS NULL AND r.status = 'Requested'
+       WHERE r.type_ride LIKE 'đi ngay%' AND r.id_vehicle IS NULL AND r.status = 'Requested'
        ORDER BY r.id_ride DESC`
     );
     res.json(result.rows);
@@ -103,7 +103,8 @@ router.post('/accept', async (req, res) => {
     // Get user and vehicle locations
     const rideInfo = await pool.query(`
       SELECT 
-        r.id_ride, 
+        r.id_ride,
+        r.status, 
         u.phone, 
         u.location as user_location,
         v.location as vehicle_location
@@ -142,6 +143,38 @@ router.get('/status/:rideId', async (req, res) => {
   } catch (error) {
     console.error('Get ride status error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+// Complete ride API
+router.post('/complete', async (req, res) => {
+  try {
+    const { id_ride } = req.body;
+    
+    // Update ride status to Completed
+    await pool.query('UPDATE rides SET status = $1 WHERE id_ride = $2', ['Completed', id_ride]);
+    
+    res.json({ status: 'ok', message: 'Ride completed successfully' });
+  } catch (err) {
+    console.error('Complete ride error:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to complete ride' });
+  }
+});
+
+
+// Pickup user API
+router.post('/pickup', async (req, res) => {
+  try {
+    const { id_ride } = req.body;
+    
+    // Update ride status to In Progress
+    await pool.query('UPDATE rides SET status = $1 WHERE id_ride = $2', ['In Progress', id_ride]);
+    
+    res.json({ status: 'ok', message: 'Picked up successfully' });
+  } catch (err) {
+    console.error('Pickup ride error:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to pickup' });
   }
 });
 

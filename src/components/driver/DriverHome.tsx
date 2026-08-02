@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { ArrowLeft } from 'lucide-react';
 import { Ride, AcceptedRideData } from '../../types';
+import { api } from '../../../lib/api';
 import { MapSection } from './MapSection';
 import { AcceptedRideCard } from './AcceptedRideCard';
 import { StatusCard } from './StatusCard';
@@ -113,7 +114,7 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
       setRides([]);
     }
 
-    return () => {
+  return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [isOnline]);
@@ -175,19 +176,66 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
           },
           (error) => {
             console.error("Lỗi lấy vị trí:", error);
-            setLocationText("Không thể lấy vị trí hiện tại");
+            const fallbackLat = 10.8700;
+            const fallbackLng = 106.8000;
+            const fallbackAddress = "Dĩ An, Bình Dương (Giả lập)";
+            
+            setLocationText(fallbackAddress);
+            updateVehicleStatus({
+              latitude: fallbackLat,
+              longitude: fallbackLng,
+              address: fallbackAddress,
+              isOnline: true
+            });
             setIsLocating(false);
-            setConnectionError("Lấy vị trí thất bại. Bật kết nối không thành công.");
+            setIsOnline(true);
+            setConnectionError("Dùng vị trí giả lập do không lấy được vị trí thực tế.");
             setTimeout(() => setConnectionError(null), 3000);
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       } else {
-        setLocationText("Trình duyệt không hỗ trợ định vị");
+        const fallbackLat = 10.8700;
+        const fallbackLng = 106.8000;
+        const fallbackAddress = "Dĩ An, Bình Dương (Giả lập)";
+        
+        setLocationText(fallbackAddress);
+        updateVehicleStatus({
+          latitude: fallbackLat,
+          longitude: fallbackLng,
+          address: fallbackAddress,
+          isOnline: true
+        });
         setIsLocating(false);
-        setConnectionError("Trình duyệt không hỗ trợ định vị. Bật kết nối không thành công.");
+        setIsOnline(true);
+        setConnectionError("Trình duyệt không hỗ trợ. Dùng vị trí giả lập.");
         setTimeout(() => setConnectionError(null), 3000);
       }
+    }
+  };
+
+  
+  const handlePickupRide = async () => {
+    if (!acceptedRideData) return;
+    try {
+      await api.rides.pickup(acceptedRideData.id_ride);
+      setAcceptedRideData({ ...acceptedRideData, status: 'In Progress' });
+    } catch (error) {
+      console.error("Failed to pickup ride:", error);
+      alert("Lỗi khi cập nhật trạng thái đón");
+    }
+  };
+
+  const handleCompleteRide = async () => {
+    if (!acceptedRideData) return;
+    try {
+      await api.rides.complete(acceptedRideData.id_ride);
+      setAcceptedRideData(null);
+      // Refresh available rides
+      fetchAvailableRides();
+    } catch (error) {
+      console.error("Failed to complete ride:", error);
+      alert("Lỗi khi hoàn thành chuyến đi");
     }
   };
 
@@ -250,7 +298,8 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
               {acceptedRideData && (
                 <AcceptedRideCard 
                   acceptedRideData={acceptedRideData} 
-                  onCompleteRide={() => setAcceptedRideData(null)} 
+                  onCompleteRide={handleCompleteRide}
+                  onPickupRide={handlePickupRide} 
                 />
               )}
 

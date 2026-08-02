@@ -66,6 +66,32 @@ export const api = {
       return response.json();
     },
 
+            pickup: async (rideId: string) => {
+      const response = await fetch('/api/rides/pickup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id_ride: rideId })
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to pickup: ${response.status}`);
+      }
+      return response.json();
+    },
+    complete: async (rideId: string) => {
+      const response = await fetch('/api/rides/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id_ride: rideId })
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to complete ride: ${response.status}`);
+      }
+      return response.json();
+    },
     getByUserId: async (userId: string) => {
       const response = await fetch(`/api/rides/${userId}`);
       if (!response.ok) {
