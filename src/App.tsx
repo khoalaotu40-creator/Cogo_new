@@ -9,6 +9,7 @@ import Settings from './components/Settings';
 import Feed from './components/Feed';
 import AvailableRides from './components/AvailableRides';
 import DriverRegistration from './components/DriverRegistration';
+import DriverHome from './components/driver/DriverHome';
 import Notifications from './components/Notifications';
 
 export default function Home() {
@@ -70,9 +71,15 @@ export default function Home() {
           <span className="text-[20px] font-bold text-[#008f55] tracking-tight">Cogo</span>
         </div>
         <div className="flex items-center gap-4">
-          <button className="text-[#008f55] hover:opacity-80 transition-opacity relative">
-            <MessageCircle className="w-[22px] h-[22px] stroke-[2]" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white">2</span>
+          <button onClick={() => {
+            const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
+            if (user.driver_id) {
+              navigateTo('driver-home');
+            } else {
+              alert('Bạn cần đăng ký làm tài xế trước (trong mục Cài đặt)');
+            }
+          }} className="text-[#008f55] hover:opacity-80 transition-opacity relative">
+            <Car className="w-[22px] h-[22px] stroke-[2]" />
           </button>
           <button onClick={() => navigateTo('notifications')} className="text-[#008f55] hover:opacity-80 transition-opacity relative">
             <Bell className="w-[22px] h-[22px] stroke-[2]" />
@@ -102,7 +109,8 @@ export default function Home() {
         {activeTab === 'rides' && <Rides onFindRide={() => navigateTo('find-ride')} />}
         {activeTab === 'find-ride' && <FindRideForm onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('rides')} />}
         {activeTab === 'profile' && <Profile />}
-        {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} onNavigateToProfile={() => navigateTo('profile')} onRegisterDriver={() => navigateTo('driver-registration')} />}
+        {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} onNavigateToProfile={() => navigateTo('profile')} onRegisterDriver={() => navigateTo('driver-registration')} onSwitchToDriverMode={() => navigateTo('driver-home')} />}
+        {activeTab === 'driver-home' && <DriverHome onBack={() => setActiveTab('settings')} />}
         {activeTab === 'driver-registration' && <DriverRegistration onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('settings')} />}
         {activeTab === 'notifications' && (
           <Notifications 
@@ -112,7 +120,7 @@ export default function Home() {
         )}
 
         {/* Bottom Navigation */}
-        {activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && activeTab !== 'driver-registration' && activeTab !== 'notifications' && (
+        {activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && activeTab !== 'driver-registration' && activeTab !== 'notifications' && activeTab !== 'driver-home' && (
           <div className="absolute bottom-0 w-full bg-white flex items-center justify-between px-12 pt-3 pb-6 sm:pb-4 border-t border-gray-100 z-50">
             <button 
               onClick={() => navigateTo('home')}

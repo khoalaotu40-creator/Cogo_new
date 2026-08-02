@@ -6,9 +6,10 @@ interface SettingsProps {
   onBack: () => void;
   onNavigateToProfile: () => void;
   onRegisterDriver: () => void;
+  onSwitchToDriverMode?: () => void;
 }
 
-export default function Settings({ onLogout, onBack, onNavigateToProfile, onRegisterDriver }: SettingsProps) {
+export default function Settings({ onLogout, onBack, onNavigateToProfile, onRegisterDriver, onSwitchToDriverMode }: SettingsProps) {
   const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -29,6 +30,7 @@ export default function Settings({ onLogout, onBack, onNavigateToProfile, onRegi
 
   const handleSwitchToDriverMode = () => {
     if (user.driver_id) {
+      if(onSwitchToDriverMode) onSwitchToDriverMode();
       showToast("Đã chuyển sang chế độ lái xe", 'success');
     } else {
       showToast("Chưa đăng ký lái xe. Vui lòng đăng ký trước.", 'error');

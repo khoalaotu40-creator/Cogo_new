@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { ArrowLeft, Clock, MapPin, Car } from 'lucide-react';
+import { ArrowLeft, Zap, Clock, MapPin, Car } from 'lucide-react';
 import type { Location } from '../../lib/api';
 
 // Fix leaflet icon issue
@@ -19,6 +19,7 @@ interface RouteMapProps {
   onBack: () => void;
   onConfirm?: () => void;
   mode?: 'create' | 'view';
+  ride?: any;
 }
 
 // Component to adjust map view to fit bounds
@@ -141,7 +142,26 @@ export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onCo
 
       {/* Route Info Bottom Panel */}
       <div className="bg-white rounded-t-[32px] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] p-6 z-[1000] relative mt-[-20px]">
-        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+        
+        {isConfirming ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="relative w-24 h-24 mb-6">
+              <div className="absolute inset-0 bg-[#008f55] rounded-full opacity-20 animate-ping" style={{ animationDuration: '1.5s' }}></div>
+              <div className="absolute inset-2 bg-[#008f55] rounded-full opacity-40 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }}></div>
+              <div className="absolute inset-4 bg-[#008f55] rounded-full opacity-60 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.6s' }}></div>
+              <div className="absolute inset-6 bg-[#008f55] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(0,143,85,0.5)] z-10">
+                <Car className="w-7 h-7 text-white" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Đang tìm tài xế...</h2>
+            <p className="text-[13px] text-gray-500 text-center max-w-[250px]">
+              Vui lòng đợi trong giây lát, hệ thống đang kết nối bạn với tài xế phù hợp gần nhất.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+
         
         {mode === 'view' && ride && (
           <div className="flex justify-between items-center mb-4">
@@ -190,7 +210,9 @@ export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onCo
           </div>
         </div>
 
-        {mode === 'create' && (
+        </>
+        )}
+        {mode === 'create' && !isConfirming && (
           <button 
             onClick={async () => {
               setIsConfirming(true);

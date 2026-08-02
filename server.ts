@@ -6,6 +6,7 @@ import authRouter from "./server/api/auth";
 import ridesRouter from "./server/api/rides";
 import postsRouter from "./server/api/posts";
 import usersRouter from "./server/api/users";
+import vehiclesRouter from "./server/api/vehicles";
 import { initDb } from "./server/db";
 
 async function startServer() {
@@ -24,6 +25,7 @@ async function startServer() {
   app.use("/api/rides", ridesRouter);
   app.use("/api/posts", postsRouter);
   app.use("/api/users", usersRouter);
+  app.use("/api/vehicles", vehiclesRouter);
   
   // Health check
   app.get("/api/health", (req, res) => {

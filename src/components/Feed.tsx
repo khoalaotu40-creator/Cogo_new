@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../lib/api';
+import { api, Location } from '../../lib/api';
 import { ThumbsUp, MessageSquare, MoreHorizontal, Zap, MapPin, Navigation, Car, Clock, Loader2 } from 'lucide-react';
 import JoinRequestModal from './JoinRequestModal';
+import RouteMap from './RouteMap';
 
 interface Post {
   id: number;
   content: string;
   departurePoint: string;
   destinationPoint: string;
+  pickupLocation?: Location;
+  dropoffLocation?: Location;
   mediaUrl?: string;
   rideFrequency?: string;
   createdAt: string;
@@ -32,10 +35,38 @@ export default function Feed({ onStart }: FeedProps) {
   const [currentUser, setCurrentUser] = useState<any>(null);
   
   // Tracking join requests locally for demo
-  const [joinStatus, setJoinStatus] = useState<Record<number, 'pending' | 'joined'>>({});
+  const [joinStatus, setJoinStatus] = useState<Record<number, 'pending' | 'joined' | 'accepted'>>({});
   
   // Modal state
   const [joiningPost, setJoiningPost] = useState<Post | null>(null);
+
+  // Menu state
+  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+
+  // View Route state
+  const [viewingRouteForPost, setViewingRouteForPost] = useState<Post | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.post-menu-container')) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDeletePost = async (postId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xoá bài viết này không?')) {
+      try {
+        await api.posts.delete(postId);
+        setPosts(posts.filter(p => p.id !== postId));
+      } catch (error) {
+        console.error("Failed to delete post", error);
+        alert('Đã có lỗi xảy ra khi xoá bài viết.');
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchPostsAndRequests = async (user: any) => {
@@ -91,6 +122,18 @@ export default function Feed({ onStart }: FeedProps) {
 
   return (
     <div className="flex flex-col pb-[80px] relative">
+      {/* Route Map Modal */}
+      {viewingRouteForPost && viewingRouteForPost.pickupLocation && viewingRouteForPost.dropoffLocation && (
+        <div className="fixed inset-0 z-[60] bg-white">
+          <RouteMap
+            pickupLocation={viewingRouteForPost.pickupLocation}
+            dropoffLocation={viewingRouteForPost.dropoffLocation}
+            onBack={() => setViewingRouteForPost(null)}
+            mode="view"
+          />
+        </div>
+      )}
+
       {/* Join Request Modal */}
       {joiningPost && (
         <JoinRequestModal
@@ -147,9 +190,31 @@ export default function Feed({ onStart }: FeedProps) {
                   </div>
                 </div>
               </div>
-              <button className="text-gray-500 p-1">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
+              <div className="relative post-menu-container">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuId(activeMenuId === post.id ? null : post.id);
+                  }} 
+                  className="text-gray-500 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+                {activeMenuId === post.id && currentUser && String(currentUser.id_user || currentUser.id) === String(post.user.id) && (
+                  <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePost(post.id);
+                        setActiveMenuId(null);
+                      }}
+                      className="w-full text-left px-4 py-2 text-[14px] text-red-600 font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      Xoá bài viết
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Content */}
@@ -158,7 +223,14 @@ export default function Feed({ onStart }: FeedProps) {
             </div>
 
             {/* Route Info Card */}
-            <div className="mx-4 bg-[#f4f7fb] rounded-[12px] overflow-hidden mb-3">
+            <div 
+              className={`mx-4 bg-[#f4f7fb] rounded-[12px] overflow-hidden mb-3 ${post.pickupLocation && post.dropoffLocation ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''}`}
+              onClick={() => {
+                if (post.pickupLocation && post.dropoffLocation) {
+                  setViewingRouteForPost(post);
+                }
+              }}
+            >
               {post.mediaUrl && (
                 <div className="w-full h-[140px] relative">
                    <img src={post.mediaUrl} alt="Map" className="w-full h-full object-cover" />

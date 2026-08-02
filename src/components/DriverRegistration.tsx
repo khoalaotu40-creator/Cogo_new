@@ -29,7 +29,7 @@ export default function DriverRegistration({ onBack, onSuccess }: DriverRegistra
         if (userStr) {
           const user = JSON.parse(userStr);
           const userId = user.id || user.id_user;
-          const randomDriverId = Math.floor(100000 + Math.random() * 900000); // 6-digit driver id
+          const randomDriverId = userId; // Use id_user from users table
           
           const updatedUser = await api.users.update(userId.toString(), {
             driver_id: randomDriverId

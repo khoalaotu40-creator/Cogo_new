@@ -25,8 +25,8 @@ router.post('/', async (req, res) => {
 
     // 2. Insert new ride
     const result = await pool.query(
-      'INSERT INTO rides (id_user, type_ride, "Diem_don", "Diem_den") VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, typeRide, JSON.stringify(pickupLocation), JSON.stringify(dropoffLocation)]
+      'INSERT INTO rides (id_user, type_ride, "Diem_don", "Diem_den", status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [userId, typeRide, JSON.stringify(pickupLocation), JSON.stringify(dropoffLocation), "Requested"]
     );
 
     res.json({ message: 'Ride created successfully', ride: result.rows[0] });
@@ -73,6 +73,74 @@ router.get('/:userId', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Get rides error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Accept ride API
+router.post('/accept', async (req, res) => {
+  try {
+    const { id_ride, driver_id } = req.body;
+    const vehicleId = 1; // Or find the vehicle associated with driver_id
+    
+    // Check if ride is still available
+    const checkResult = await pool.query('SELECT * FROM rides WHERE id_ride = $1 AND id_vehicle IS NULL', [id_ride]);
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Ride is no longer available' });
+    }
+    
+    // Get the vehicle ID for this driver
+    const vehicleResult = await pool.query('SELECT id_vehicle FROM vehicles WHERE id_user = $1 LIMIT 1', [driver_id]);
+    let actualVehicleId = vehicleId;
+    if (vehicleResult.rows.length > 0) {
+      actualVehicleId = vehicleResult.rows[0].id_vehicle;
+    }
+    
+    // Update ride with vehicle ID
+    await pool.query('UPDATE rides SET id_vehicle = $1, status = $2 WHERE id_ride = $3', [actualVehicleId, 'Arriving', id_ride]);
+    
+    // Get user and vehicle locations
+    const rideInfo = await pool.query(`
+      SELECT 
+        r.id_ride, 
+        u.phone, 
+        u.location as user_location,
+        v.location as vehicle_location
+      FROM rides r
+      JOIN users u ON r.id_user = u.id_user
+      JOIN vehicles v ON v.id_vehicle = r.id_vehicle
+      WHERE r.id_ride = $1
+    `, [id_ride]);
+    
+    const data = rideInfo.rows[0];
+    if (data && typeof data.vehicle_location === 'string') {
+      try {
+        data.vehicle_location = JSON.parse(data.vehicle_location);
+      } catch (e) {
+        console.error("Failed to parse vehicle_location", e);
+      }
+    }
+    
+    res.json({ status: 'ok', data });
+  } catch (err) {
+    console.error('Accept ride error:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to accept ride' });
+  }
+});
+
+
+// Get specific ride status
+router.get('/status/:rideId', async (req, res) => {
+  try {
+    const { rideId } = req.params;
+    const result = await pool.query('SELECT status, id_vehicle FROM rides WHERE id_ride = $1', [rideId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ride not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Get ride status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

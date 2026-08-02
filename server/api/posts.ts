@@ -11,6 +11,8 @@ router.get("/", async (req, res) => {
         p.content, 
         p.departure_point, 
         p.destination_point, 
+        p.pickup_location,
+        p.dropoff_location,
         p.media_url, 
         p.ride_frequency, 
         p.privacy, 
@@ -23,6 +25,7 @@ router.get("/", async (req, res) => {
         (SELECT COUNT(*) FROM post_comments c WHERE c.post_id = p.post_id) as comments_count
       FROM posts p
       JOIN users u ON p.user_id = u.id_user
+      WHERE p.status = 'active'
       ORDER BY p.created_at DESC
     `);
     
@@ -32,6 +35,8 @@ router.get("/", async (req, res) => {
       content: row.content,
       departurePoint: row.departure_point,
       destinationPoint: row.destination_point,
+      pickupLocation: row.pickup_location,
+      dropoffLocation: row.dropoff_location,
       mediaUrl: row.media_url,
       rideFrequency: row.ride_frequency,
       createdAt: row.created_at,
@@ -53,8 +58,26 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  const postId = req.params.id;
+  
+  try {
+    const { rows } = await pool.query(
+      `UPDATE posts SET status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE post_id = $1 RETURNING *`,
+      [postId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.json({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/", async (req, res) => {
-  const { user_id, content, departure_point, destination_point, media_url, ride_frequency, privacy } = req.body;
+  const { user_id, content, departure_point, destination_point, pickup_location, dropoff_location, media_url, ride_frequency, privacy } = req.body;
   
   if (!user_id || !content) {
     return res.status(400).json({ error: "User ID and content are required" });
@@ -62,14 +85,16 @@ router.post("/", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO posts (user_id, content, departure_point, destination_point, media_url, ride_frequency, privacy, status, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+      `INSERT INTO posts (user_id, content, departure_point, destination_point, pickup_location, dropoff_location, media_url, ride_frequency, privacy, status, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
        RETURNING *`,
       [
         user_id, 
         content, 
         departure_point || '', 
         destination_point || '', 
+        pickup_location ? JSON.stringify(pickup_location) : null,
+        dropoff_location ? JSON.stringify(dropoff_location) : null,
         media_url || null, 
         ride_frequency || null, 
         privacy || 'public'

@@ -57,6 +57,15 @@ export const api = {
       }
       return response.json();
     },
+    
+    getStatus: async (rideId: string) => {
+      const response = await fetch(`/api/rides/status/${rideId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ride status: ${response.status}`);
+      }
+      return response.json();
+    },
+
     getByUserId: async (userId: string) => {
       const response = await fetch(`/api/rides/${userId}`);
       if (!response.ok) {
@@ -98,7 +107,16 @@ export const api = {
       }
       return response.json();
     },
-    create: async (data: { user_id: number; content: string; departure_point?: string; destination_point?: string; media_url?: string; ride_frequency?: string; privacy?: string }) => {
+    delete: async (id: number) => {
+      const response = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to delete post: ${response.status}`);
+      }
+      return response.json();
+    },
+    create: async (data: { user_id: number; content: string; departure_point?: string; destination_point?: string; pickup_location?: any; dropoff_location?: any; media_url?: string; ride_frequency?: string; privacy?: string }) => {
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {

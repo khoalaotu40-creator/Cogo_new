@@ -144,15 +144,34 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
           content: content,
           departure_point: pickupLocation?.name || pickup,
           destination_point: dropoffLocation?.name || dropoff,
+          pickup_location: pickupLocation,
+          dropoff_location: dropoffLocation,
           ride_frequency: repeat,
           privacy: 'public'
         });
         await api.rides.create(userId, pickupLocation!, dropoffLocation!, 'đặt lịch');
         alert('Đã tạo chuyến đi và bài đăng thành công!');
+        onSuccess();
       } else {
-        await api.rides.create(userId, pickupLocation!, dropoffLocation!, 'đi ngay');
+        const response = await api.rides.create(userId, pickupLocation!, dropoffLocation!, 'đi ngay');
+        const rideId = response.ride?.id_ride;
+        if (!rideId) {
+            alert('Lỗi khởi tạo chuyến đi!');
+            return;
+        }
+        
+        // Wait until driver accepts
+        let isAccepted = false;
+        while (!isAccepted) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            const statusRes = await api.rides.getStatus(rideId);
+            if (statusRes.id_vehicle !== null) {
+                isAccepted = true;
+            }
+        }
+        
+        onSuccess();
       }
-      onSuccess();
     } catch (error: any) {
       console.error('Create ride error:', error);
       if (error.message && error.message.includes('401')) {
