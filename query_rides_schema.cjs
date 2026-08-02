@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 const pool = new Pool({
   host: process.env.DB_HOST || 'aws-1-ap-northeast-2.pooler.supabase.com',
   port: parseInt(process.env.DB_PORT || '6543', 10),
@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 async function run() {
-  const res = await pool.query("SELECT id_ride, status FROM rides ORDER BY id_ride DESC LIMIT 5;");
+  const res = await pool.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'rides';");
   console.log(res.rows);
   process.exit(0);
 }

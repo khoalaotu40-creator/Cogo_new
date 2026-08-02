@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Star, MapPin, User, ChevronRight } from 'lucide-react';
-import { api } from '../../../lib/api';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Search, Star, MapPin, User, ChevronRight, Navigation } from 'lucide-react';
+import { api, Location } from '../../../lib/api';
 
 interface AvailableRidesProps {
   onBack: () => void;
@@ -8,8 +8,93 @@ interface AvailableRidesProps {
 
 export default function AvailableRides({ onBack }: AvailableRidesProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [pickupQuery, setPickupQuery] = useState('');
   const [availableRides, setAvailableRides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [pickupResults, setPickupResults] = useState<Location[]>([]);
+  const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
+  const pickupRef = useRef<HTMLDivElement>(null);
+
+  const [dropoffResults, setDropoffResults] = useState<Location[]>([]);
+  const [showDropoffSuggestions, setShowDropoffSuggestions] = useState(false);
+  const dropoffRef = useRef<HTMLDivElement>(null);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (pickupRef.current && !pickupRef.current.contains(event.target as Node)) {
+        setShowPickupSuggestions(false);
+      }
+      if (dropoffRef.current && !dropoffRef.current.contains(event.target as Node)) {
+        setShowDropoffSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [pickupRef, dropoffRef]);
+
+  // Debounced search for pickup
+  useEffect(() => {
+    const searchTimer = setTimeout(async () => {
+      if (pickupQuery.trim() && showPickupSuggestions) {
+        try {
+          const results = await api.locations.suggest(pickupQuery);
+          setPickupResults(results);
+        } catch (error) {
+          console.error("Error fetching pickup suggestions:", error);
+        }
+      } else {
+        setPickupResults([]);
+      }
+    }, 400);
+    return () => clearTimeout(searchTimer);
+  }, [pickupQuery, showPickupSuggestions]);
+
+  // Debounced search for dropoff
+  useEffect(() => {
+    const searchTimer = setTimeout(async () => {
+      if (searchQuery.trim() && showDropoffSuggestions) {
+        try {
+          const results = await api.locations.suggest(searchQuery);
+          setDropoffResults(results);
+        } catch (error) {
+          console.error("Error fetching dropoff suggestions:", error);
+        }
+      } else {
+        setDropoffResults([]);
+      }
+    }, 400);
+    return () => clearTimeout(searchTimer);
+  }, [searchQuery, showDropoffSuggestions]);
+
+  const handleGetCurrentLocation = async (isPickup: boolean) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const loc = await api.locations.reverse(position.coords.latitude, position.coords.longitude);
+            if (isPickup) {
+              setPickupQuery(loc.address || loc.name);
+              setShowPickupSuggestions(false);
+            } else {
+              setSearchQuery(loc.address || loc.name);
+              setShowDropoffSuggestions(false);
+            }
+          } catch (error) {
+            console.error("Error reverse geocoding:", error);
+            if (isPickup) setPickupQuery("Vị trí hiện tại");
+            else setSearchQuery("Vị trí hiện tại");
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+        }
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchAvailableRides = async () => {
@@ -26,8 +111,13 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
   }, []);
 
   const filteredRides = availableRides.filter((ride) => {
-    const destName = ride.Diem_den?.name || '';
-    return destName.toLowerCase().includes(searchQuery.toLowerCase());
+    const destName = (ride.Diem_den?.name || '') + ' ' + (ride.Diem_den?.address || '');
+    const pickupName = (ride.Diem_don?.name || '') + ' ' + (ride.Diem_don?.address || '');
+    
+    const matchesDest = destName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPickup = pickupName.toLowerCase().includes(pickupQuery.toLowerCase());
+    
+    return matchesDest && matchesPickup;
   });
 
   return (
@@ -45,17 +135,88 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
 
       {/* Search */}
       <div className="p-4 bg-white shadow-sm border-b border-gray-100 sticky top-[60px] z-10">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-[18px] w-[18px] text-gray-400" />
+        <div className="bg-[#f8f9fc] rounded-[16px] p-3 shadow-sm border border-gray-100">
+          <div className="space-y-3 relative">
+            <div className="absolute left-[20px] top-[24px] bottom-[24px] w-[2px] bg-gray-200 z-0"></div>
+            
+            <div className="relative z-20" ref={pickupRef}>
+              <div className="flex items-center bg-white border border-gray-100 rounded-lg px-3 py-2 shadow-sm">
+                <Navigation className="w-[18px] h-[18px] text-[#008f55] mr-3 stroke-[2.5]" />
+                <input 
+                  type="text" 
+                  placeholder="123 Nguyễn Văn Linh, Quận 7" 
+                  value={pickupQuery}
+                  onChange={(e) => setPickupQuery(e.target.value)}
+                  onFocus={() => setShowPickupSuggestions(true)}
+                  className="flex-1 outline-none text-[14px] placeholder-gray-500 text-gray-800" 
+                />
+              </div>
+              {showPickupSuggestions && (
+                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-[12px] shadow-lg py-2 z-50 max-h-[200px] overflow-y-auto">
+                  {pickupQuery.trim() === '' ? (
+                    <button onMouseDown={() => handleGetCurrentLocation(true)} className="w-full px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors text-left">
+                      <Navigation className="w-4 h-4 text-blue-500 mt-0.5" />
+                      <div className="font-semibold text-gray-900 text-[14px]">Vị trí hiện tại</div>
+                    </button>
+                  ) : pickupResults.map((suggestion) => (
+                    <button 
+                      key={suggestion.id}
+                      onMouseDown={() => {
+                        setPickupQuery(suggestion.address || suggestion.name);
+                        setShowPickupSuggestions(false);
+                      }}
+                      className="w-full px-4 py-2 flex items-start gap-3 hover:bg-gray-50 text-left"
+                    >
+                      <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                      <div>
+                        <div className="font-medium text-gray-900 text-[14px]">{suggestion.name}</div>
+                        <div className="text-gray-500 text-[12px] truncate max-w-[200px]">{suggestion.address}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative z-10" ref={dropoffRef}>
+              <div className="flex items-center bg-white border border-[#008f55] rounded-lg px-3 py-2 shadow-sm">
+                <MapPin className="w-[18px] h-[18px] text-red-500 mr-3 stroke-[2.5]" />
+                <input 
+                  type="text" 
+                  placeholder="Bạn muốn đến đâu?" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setShowDropoffSuggestions(true)}
+                  className="flex-1 outline-none text-[14px] placeholder-gray-400 text-gray-800 bg-transparent" 
+                />
+              </div>
+              {showDropoffSuggestions && (
+                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-[12px] shadow-lg py-2 z-50 max-h-[200px] overflow-y-auto">
+                  {searchQuery.trim() === '' ? (
+                    <button onMouseDown={() => handleGetCurrentLocation(false)} className="w-full px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors text-left">
+                      <Navigation className="w-4 h-4 text-blue-500 mt-0.5" />
+                      <div className="font-semibold text-gray-900 text-[14px]">Vị trí hiện tại</div>
+                    </button>
+                  ) : dropoffResults.map((suggestion) => (
+                    <button 
+                      key={suggestion.id}
+                      onMouseDown={() => {
+                        setSearchQuery(suggestion.address || suggestion.name);
+                        setShowDropoffSuggestions(false);
+                      }}
+                      className="w-full px-4 py-2 flex items-start gap-3 hover:bg-gray-50 text-left"
+                    >
+                      <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                      <div>
+                        <div className="font-medium text-gray-900 text-[14px]">{suggestion.name}</div>
+                        <div className="text-gray-500 text-[12px] truncate max-w-[200px]">{suggestion.address}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-[12px] bg-white text-[15px] focus:outline-none focus:ring-1 focus:ring-[#008f55] focus:border-[#008f55] shadow-sm"
-            placeholder="Điểm đến (VD: Hà Nội)"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
         </div>
       </div>
 
@@ -68,22 +229,41 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
         ) : (
           filteredRides.map((ride) => (
             <div key={ride.id_ride} className="bg-white rounded-[16px] shadow-sm overflow-hidden border border-gray-100">
-              {/* Driver Info & Price */}
-              <div className="p-4 border-b border-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img src={ride.avatar_url || "https://i.pravatar.cc/150?img=3"} alt={ride.driver_name || ride.phone} className="w-12 h-12 rounded-full object-cover" />
-                  <div>
-                    <h3 className="font-bold text-[16px] text-gray-900 leading-tight">{ride.driver_name || ride.phone}</h3>
-                    <div className="flex items-center text-[13px] text-gray-500 mt-1">
-                      <Star className="w-3.5 h-3.5 text-gray-400 fill-current mr-1" />
-                      4.9 (120 chuyến)
+              {/* People Info & Price */}
+              <div className="p-4 border-b border-gray-50 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  {/* Passenger (Requester) */}
+                  <div className="flex items-center gap-3">
+                    <img src={ride.passenger_avatar_url || "https://i.pravatar.cc/150?img=3"} alt={ride.passenger_name || ride.passenger_phone} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100" />
+                    <div>
+                      <h3 className="font-bold text-[16px] text-gray-900 leading-tight">{ride.passenger_name || ride.passenger_phone || "Hành khách"}</h3>
+                      <div className="flex items-center text-[13px] text-gray-500 mt-1">
+                        <User className="w-3.5 h-3.5 text-gray-400 mr-1" />
+                        Người đặt chuyến
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Price */}
+                  <div className="text-right">
+                    <div className="font-bold text-[#008f55] text-[16px] leading-tight">Thỏa thuận</div>
+                    <div className="text-[12px] text-gray-500 mt-0.5">/ ghế</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-[#008f55] text-[16px] leading-tight">Thỏa thuận</div>
-                  <div className="text-[12px] text-gray-500 mt-0.5">/ ghế</div>
-                </div>
+
+                {/* Driver (if ride is in progress or arriving) */}
+                {(ride.status === 'Arriving' || ride.status === 'In Progress') && ride.driver_name && (
+                  <div className="flex items-center gap-3 pt-3 border-t border-gray-50 mt-1">
+                    <img src={ride.driver_avatar || "https://i.pravatar.cc/150?img=4"} alt={ride.driver_name || ride.driver_phone} className="w-12 h-12 rounded-full object-cover border-2 border-[#008f55]" />
+                    <div>
+                      <h3 className="font-bold text-[16px] text-gray-900 leading-tight">{ride.driver_name || ride.driver_phone}</h3>
+                      <div className="flex items-center text-[13px] text-gray-500 mt-1">
+                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-current mr-1" />
+                        4.9 (Tài xế)
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Route */}
@@ -116,9 +296,15 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
                   <User className="w-[18px] h-[18px]" />
                   Còn 1 chỗ
                 </div>
-                <button className="bg-[#008f55] hover:bg-[#007a48] text-white px-6 py-2 rounded-full font-bold text-[14px] transition-colors shadow-sm">
-                  Tham gia
-                </button>
+                {ride.status === 'Requested' ? (
+                  <button className="bg-[#008f55] hover:bg-[#007a48] text-white px-6 py-2 rounded-full font-bold text-[14px] transition-colors shadow-sm">
+                    Tham gia
+                  </button>
+                ) : (
+                  <button disabled className="bg-gray-200 text-gray-500 px-6 py-2 rounded-full font-bold text-[14px] shadow-sm cursor-not-allowed">
+                    {ride.status === 'Arriving' ? 'Đang đón' : 'Đang diễn ra'}
+                  </button>
+                )}
               </div>
             </div>
           ))

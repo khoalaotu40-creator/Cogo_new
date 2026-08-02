@@ -225,7 +225,7 @@ export default function RouteMap({ pickupLocation, dropoffLocation, onBack, onCo
             disabled={isConfirming}
             className="w-full bg-[#008f55] text-white font-bold text-[16px] py-3.5 rounded-full shadow-md hover:bg-[#00824d] transition-colors disabled:opacity-70 flex items-center justify-center"
           >
-            {isConfirming ? "Đang xử lý..." : "Xác nhận tạo chuyến"}
+            {isConfirming ? "Đang tìm tài xế..." : "Xác nhận tạo chuyến"}
           </button>
         )}
         {mode === 'view' && (

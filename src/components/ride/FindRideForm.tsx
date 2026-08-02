@@ -178,7 +178,8 @@ export default function FindRideForm({ onBack, onSuccess }: FindRideFormProps) {
             }
         }
         
-        onSuccess();
+        setTrackedRideId(rideId.toString());
+        setShowRouteMap(false);
       }
     } catch (error: any) {
       console.error('Create ride error:', error);

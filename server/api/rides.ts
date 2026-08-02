@@ -199,16 +199,18 @@ router.get('/tracking/:rideId', async (req, res) => {
         r."Diem_don",
         r."Diem_den",
         v.location as vehicle_location,
-        v.name_vehicle as brand,
-        'Biển số (Chưa cập nhật)' as plate,
-        'Màu xe (Chưa cập nhật)' as color,
-        u.name as driver_name,
-        u.phone as driver_phone,
-        'https://i.pravatar.cc/150?img=11' as driver_avatar,
-        '5.0' as driver_rating
+        v.name_vehicle,
+        driver.name as driver_name,
+        driver.phone as driver_phone,
+        driver.avatar_url as driver_avatar,
+        '5.0' as driver_rating,
+        passenger.name as passenger_name,
+        passenger.phone as passenger_phone,
+        passenger.avatar_url as passenger_avatar
       FROM rides r
       JOIN vehicles v ON r.id_vehicle = v.id_vehicle
-      JOIN users u ON v.id_user = u.id_user
+      JOIN users driver ON v.id_user = driver.id_user
+      JOIN users passenger ON r.id_user = passenger.id_user
       WHERE r.id_ride = $1
     `, [rideId]);
     
@@ -225,6 +227,23 @@ router.get('/tracking/:rideId', async (req, res) => {
     }
     if (typeof data.Diem_den === 'string') {
       try { data.Diem_den = JSON.parse(data.Diem_den); } catch(e){}
+    }
+    
+    // Parse name_vehicle to get brand, color, plate
+    // Format is usually: Brand Model Color - Plate OR Brand Model - Plate
+    data.brand = 'Không rõ';
+    data.color = '';
+    data.plate = '';
+    if (data.name_vehicle) {
+        const parts = data.name_vehicle.split(' - ');
+        if (parts.length >= 2) {
+            data.plate = parts.pop();
+            const rest = parts.join(' - ');
+            // Try to extract color (last word if not a model number maybe, just use as brand/color)
+            data.brand = rest;
+        } else {
+            data.brand = data.name_vehicle;
+        }
     }
     
     res.json(data);
