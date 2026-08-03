@@ -243,9 +243,69 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
     }
   };
 
+
+  useEffect(() => {
+    let interval: any;
+    if (acceptedRideData && acceptedRideData.id_ride) {
+      interval = setInterval(async () => {
+        try {
+          const reqs = await api.rides.getJoinRequestsForRide(acceptedRideData.id_ride);
+          setJoinRequests(reqs);
+        } catch (e) {}
+      }, 3000);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [acceptedRideData]);
+
+  const handleAcceptJoin = async (requestId: number) => {
+    try {
+      setAcceptingRequest(requestId);
+      const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
+      await api.rides.acceptJoinRequest(requestId, user.id || user.id_user, 'driver');
+      setJoinRequests(prev => prev.filter(req => req.id !== requestId));
+      alert('Đã chấp nhận yêu cầu ghép chuyến');
+    } catch (e) {
+      alert('Lỗi khi chấp nhận');
+    } finally {
+      setAcceptingRequest(null);
+    }
+  };
+
   return (
     <div className="h-full bg-gray-100 flex items-center justify-center font-sans">
       <div className="w-full bg-[#F5F7F8] h-full relative overflow-hidden flex flex-col">
+
+      {joinRequests.length > 0 && (
+        <div className="absolute top-20 left-0 right-0 px-4 z-[400] flex flex-col gap-3 pointer-events-none">
+          {joinRequests.map(req => (
+            <div key={req.id} className="bg-white rounded-[16px] shadow-lg p-3 flex items-center justify-between pointer-events-auto border border-gray-100">
+               <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#E5E9FF] flex items-center justify-center text-[#1a2b4b] font-medium text-lg">
+                    {req.user_name ? req.user_name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[16px] text-gray-900 leading-tight mb-1">{req.user_name || 'Người dùng'}</div>
+                    <div className="text-[13px] text-gray-600">
+                      Cách bạn 500m • Gần điểm đến
+                    </div>
+                  </div>
+               </div>
+               <button 
+                 onClick={() => handleAcceptJoin(req.id)}
+                 disabled={acceptingRequest === req.id}
+                 className="w-12 h-12 rounded-xl bg-[#c5ebd4] text-[#008f55] flex items-center justify-center hover:bg-[#a6dfbe] transition-colors flex-shrink-0 ml-2"
+               >
+                 {acceptingRequest === req.id ? (
+                   <div className="w-5 h-5 border-2 border-[#008f55] border-t-transparent rounded-full animate-spin" />
+                 ) : (
+                   <UserPlus className="w-6 h-6" strokeWidth={2.5} />
+                 )}
+               </button>
+            </div>
+          ))}
+        </div>
+      )}
+
         
         
         {/* Connection Error Toast */}
