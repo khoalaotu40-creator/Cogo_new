@@ -183,7 +183,38 @@ router.post("/requests/:requestId/respond", async (req, res) => {
       `UPDATE post_requests SET status = $1 WHERE request_id = $2 RETURNING *`,
       [status, requestId]
     );
-    res.json(rows[0]);
+    const requestData = rows[0];
+
+    if (status === 'accepted' && requestData) {
+      let pickupPoint = requestData.pickup_point;
+      if (typeof pickupPoint === 'string') {
+        try { pickupPoint = JSON.parse(pickupPoint); } catch (e) {}
+      }
+
+      if (pickupPoint) {
+        // Find post author
+        const postRes = await pool.query('SELECT user_id FROM posts WHERE post_id = $1', [requestData.post_id]);
+        if (postRes.rows.length > 0) {
+          const postUserId = postRes.rows[0].user_id;
+          // Find active ride
+          const rideRes = await pool.query(
+            `SELECT id_ride FROM rides WHERE (id_user = $1 OR id_vehicle IN (SELECT id_vehicle FROM vehicles WHERE id_user = $1)) AND status IN ('Requested', 'Arriving', 'In Progress') ORDER BY id_ride DESC LIMIT 1`,
+            [postUserId]
+          );
+          if (rideRes.rows.length > 0) {
+            const rideId = rideRes.rows[0].id_ride;
+            await pool.query(
+              `UPDATE rides 
+               SET passengers_pickups = COALESCE(passengers_pickups, '[]'::jsonb) || $1::jsonb 
+               WHERE id_ride = $2`,
+              [JSON.stringify([pickupPoint]), rideId]
+            );
+          }
+        }
+      }
+    }
+
+    res.json(requestData);
   } catch (error) {
     console.error("Error updating request status:", error);
     res.status(500).json({ error: "Internal server error" });

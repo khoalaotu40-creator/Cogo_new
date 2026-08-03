@@ -64,22 +64,33 @@ export default function RideTracking({ rideId, onBack }: RideTrackingProps) {
         } catch (err) {}
         
         if (data && data.vehicle_location) {
-          let startLng = data.vehicle_location.longitude;
-          let startLat = data.vehicle_location.latitude;
-          let endLng, endLat;
-          
-          if (data.status === 'Arriving') {
-             endLng = data.Diem_don ? data.Diem_don.lng : data.user_location?.lng;
-             endLat = data.Diem_don ? data.Diem_don.lat : data.user_location?.lat;
-          } else {
-             endLng = data.Diem_den ? data.Diem_den.lng : data.user_location?.lng;
-             endLat = data.Diem_den ? data.Diem_den.lat : data.user_location?.lat;
+          const waypoints: string[] = [];
+
+          const startLng = data.vehicle_location.longitude;
+          const startLat = data.vehicle_location.latitude;
+          if (startLng && startLat) {
+            waypoints.push(`${startLng},${startLat}`);
           }
-          
-          if (endLng && endLat) {
-              const response = await fetch(
-                `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`
-              );
+
+          if (data.Diem_don && data.Diem_don.lng && data.Diem_don.lat) {
+            waypoints.push(`${data.Diem_don.lng},${data.Diem_don.lat}`);
+          }
+
+          if (Array.isArray(data.passengers_pickups)) {
+            data.passengers_pickups.forEach((p: any) => {
+              if (p && p.lng && p.lat) {
+                waypoints.push(`${p.lng},${p.lat}`);
+              }
+            });
+          }
+
+          if (data.Diem_den && data.Diem_den.lng && data.Diem_den.lat) {
+            waypoints.push(`${data.Diem_den.lng},${data.Diem_den.lat}`);
+          }          
+          if (waypoints.length >= 2) {
+              const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${waypoints.join(';')}?overview=full&geometries=geojson`;
+              const response = await fetch(osrmUrl);
+
               const routeData = await response.json();
               if (routeData.routes && routeData.routes.length > 0) {
                 const route = routeData.routes[0];
@@ -186,6 +197,11 @@ export default function RideTracking({ rideId, onBack }: RideTrackingProps) {
           {endLat !== 0 && (
               <Marker position={[endLat, endLng]} icon={trackingData.status === 'Arriving' ? userIcon : destIcon} />
           )}
+          {Array.isArray(trackingData.passengers_pickups) && trackingData.passengers_pickups.map((p: any, idx: number) => (
+            p && p.lat && p.lng ? (
+              <Marker key={idx} position={[p.lat, p.lng]} icon={userIcon} />
+            ) : null
+          ))}         
           {routeCoordinates.length > 0 && (
             <Polyline positions={routeCoordinates} color="#00A550" weight={5} />
           )}

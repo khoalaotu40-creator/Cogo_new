@@ -327,6 +327,7 @@ router.get('/tracking/:rideId', async (req, res) => {
         r.status,
         r."Diem_don",
         r."Diem_den",
+        r.passengers_pickups,
         v.location as vehicle_location,
         v.name_vehicle,
         driver.name as driver_name,
@@ -357,9 +358,14 @@ router.get('/tracking/:rideId', async (req, res) => {
     if (typeof data.Diem_den === 'string') {
       try { data.Diem_den = JSON.parse(data.Diem_den); } catch(e){}
     }
-    
+    if (typeof data.passengers_pickups === 'string') {
+      try { data.passengers_pickups = JSON.parse(data.passengers_pickups); } catch(e){}
+    }
+    if (!data.passengers_pickups) {
+      data.passengers_pickups = [];
+    }   
     // Parse name_vehicle to get brand, color, plate
-    // Format is usually: Brand Model Color - Plate OR Brand Model - Plate
+    
     data.brand = 'Không rõ';
     data.color = '';
     data.plate = '';
@@ -368,7 +374,6 @@ router.get('/tracking/:rideId', async (req, res) => {
         if (parts.length >= 2) {
             data.plate = parts.pop();
             const rest = parts.join(' - ');
-            // Try to extract color (last word if not a model number maybe, just use as brand/color)
             data.brand = rest;
         } else {
             data.brand = data.name_vehicle;
@@ -387,7 +392,19 @@ router.get('/tracking/:rideId', async (req, res) => {
 router.post('/:rideId/join-request', async (req, res) => {
   try {
     const { rideId } = req.params;
-    const { userId, pickupLocation } = req.body;
+    let { userId, pickupLocation } = req.body;
+
+    if (!pickupLocation || (!pickupLocation.name && !pickupLocation.address && !pickupLocation.lat)) {
+      return res.status(400).json({ error: 'Chưa xác định điểm đón (Diem_don). Vui lòng nhập điểm đón!' });
+    }
+
+    if (typeof pickupLocation === 'object' && pickupLocation !== null) {
+      if (!pickupLocation.lat || !pickupLocation.lng) {
+        pickupLocation.lat = 10.7769 + (Math.random() * 0.01 - 0.005);
+        pickupLocation.lng = 106.7009 + (Math.random() * 0.01 - 0.005);
+      }
+    }
+
     const result = await pool.query(
       'INSERT INTO ride_join_requests (id_ride, user_id, pickup_location, status) VALUES ($1, $2, $3, $4) RETURNING *',
       [rideId, userId, JSON.stringify(pickupLocation), 'pending']
@@ -448,6 +465,26 @@ router.post('/join-request/:requestId/accept', async (req, res) => {
     // Mark as accepted
     await pool.query("UPDATE ride_join_requests SET status = 'accepted' WHERE id = $1", [requestId]);
     
+    // Extract passenger pickup location
+    let pickupLoc = request.pickup_location;
+    if (typeof pickupLoc === 'string') {
+      try { pickupLoc = JSON.parse(pickupLoc); } catch (e) {}
+    }
+
+    if (pickupLoc) {
+      if (typeof pickupLoc === 'object') {
+        if (!pickupLoc.lat || !pickupLoc.lng) {
+          pickupLoc.lat = 10.7769 + (Math.random() * 0.01 - 0.005);
+          pickupLoc.lng = 106.7009 + (Math.random() * 0.01 - 0.005);
+        }
+      }
+      await pool.query(
+        `UPDATE rides 
+         SET passengers_pickups = COALESCE(passengers_pickups, '[]'::jsonb) || $1::jsonb 
+         WHERE id_ride = $2`,
+        [JSON.stringify([pickupLoc]), request.id_ride]
+      );
+    }
     // Add to trip_segments
     // We need to find the trip for this ride
     const tripRes = await pool.query('SELECT * FROM trips WHERE id_ride = $1 ORDER BY id_trip DESC LIMIT 1', [request.id_ride]);
@@ -466,7 +503,7 @@ router.post('/join-request/:requestId/accept', async (req, res) => {
        );
     }
     
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', pickupLocation: pickupLoc });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

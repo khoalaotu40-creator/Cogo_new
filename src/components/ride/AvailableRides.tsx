@@ -52,23 +52,59 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
     const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
     const userId = user.id || user.id_user;
     if (!userId) return alert('Vui lòng đăng nhập');
+
     
+    if (!pickupQuery || !pickupQuery.trim()) {
+      alert("Không có điểm đón! Vui lòng chọn hoặc nhập điểm đón ở trên trước khi tham gia.");
+      if (pickupRef.current) {
+        const inputEl = pickupRef.current.querySelector('input');
+        if (inputEl) inputEl.focus();
+      }
+      return;
+    }
+
+    const pickupText = pickupQuery.trim();
+       
     // get location and join
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
          const lat = pos.coords.latitude;
          const lng = pos.coords.longitude;
          try {
-           const res = await api.rides.requestJoin(rideId, { lat, lng, id: 'current', name: 'Vị trí hiện tại của tôi', address: 'Vị trí hiện tại' }, userId);
+            const res = await api.rides.requestJoin(rideId, { lat, lng, id: 'pickup', name: pickupText, address: pickupText }, userId);
+            if (res.status === 'ok') {
+               setWaitingForRide(rideId);
+               setJoinRequestId(res.request.id);
+               setJoinRequestStatus('pending');
+            }
+          } catch (e: any) { 
+            alert(e.message || 'Lỗi khi gửi yêu cầu'); 
+          }
+        },
+        async (err) => {
+          // Fallback if geolocation permission is denied/fails but pickupQuery is entered
+          try {
+            const res = await api.rides.requestJoin(rideId, { lat: 10.7769, lng: 106.7009, id: 'pickup', name: pickupText, address: pickupText }, userId);
+            if (res.status === 'ok') {
+               setWaitingForRide(rideId);
+               setJoinRequestId(res.request.id);
+               setJoinRequestStatus('pending');
+            }
+          } catch (e: any) { alert(e.message || 'Lỗi khi gửi yêu cầu'); }
+        }
+      );
+    } else {
+       // Fallback without geolocation
+       api.rides.requestJoin(rideId, { lat: 10.7769, lng: 106.7009, id: 'pickup', name: pickupText, address: pickupText }, userId)
+         .then(res => {
            if (res.status === 'ok') {
               setWaitingForRide(rideId);
               setJoinRequestId(res.request.id);
               setJoinRequestStatus('pending');
            }
-         } catch (e) { alert('Lỗi khi gửi yêu cầu'); }
-      });
-    } else {
-       alert('Không thể lấy vị trí');
+         })
+         .catch(e => alert(e.message || 'Lỗi khi gửi yêu cầu'));
     }
   };
 

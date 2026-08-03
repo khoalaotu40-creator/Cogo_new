@@ -141,19 +141,25 @@ export default function JoinRequestModal({ post, currentUser, onClose, onSuccess
 
   const handleJoinConfirm = async () => {
     if (!currentUser) return;
-    
+    const resolvedPickup = pickupLocation || (pickupPoint.trim() ? { name: pickupPoint.trim(), address: pickupPoint.trim() } : null);
+    if (!resolvedPickup || (!resolvedPickup.name && !resolvedPickup.address)) {
+      alert("Không có điểm đón! Vui lòng xác định điểm đón trước khi tham gia.");
+      return;
+    }
+        
     setIsSubmitting(true);
     try {
       await api.posts.join(post.id, {
         user_id: currentUser.id || currentUser.id_user,
         message: joinNotes,
         requested_seats: requestedSeats,
-        pickup_point: pickupLocation || (pickupPoint ? { name: pickupPoint, address: pickupPoint } : null),
+        pickup_point: resolvedPickup,
         dropoff_point: dropoffLocation || (dropoffPoint ? { name: dropoffPoint, address: dropoffPoint } : null)
       });
       onSuccess(post.id);
     } catch (error) {
       console.error("Failed to join post:", error);
+      alert("Có lỗi xảy ra khi gửi yêu cầu.");    
     } finally {
       setIsSubmitting(false);
     }
@@ -244,7 +250,7 @@ export default function JoinRequestModal({ post, currentUser, onClose, onSuccess
             </div>
 
             <div>
-              <h4 className="font-bold text-[14px] text-gray-900 mb-2">Điểm đón chi tiết (Tùy chọn)</h4>
+              <h4 className="font-bold text-[14px] text-gray-900 mb-2">Điểm đón chi tiết <span className="text-red-500 font-semibold">(Bắt buộc)</span></h4>
               <div className="relative" ref={pickupRef}>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MapPin className="h-5 w-5 text-gray-400" />

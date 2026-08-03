@@ -20,8 +20,11 @@ export interface AcceptedRideData {
     name?: string;
     address?: string;
   };
+  
   Diem_don?: any;
   Diem_den?: any;
+  passengers_pickups?: any[];
+
   vehicle_location: {
     latitude: number;
     longitude: number;

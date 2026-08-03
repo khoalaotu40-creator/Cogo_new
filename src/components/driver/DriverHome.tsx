@@ -251,11 +251,21 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
         try {
           const reqs = await api.rides.getJoinRequestsForRide(acceptedRideData.id_ride);
           setJoinRequests(reqs);
+
+          const updatedRide = await api.rides.getTracking(acceptedRideData.id_ride);
+          if (updatedRide && updatedRide.id_ride) {
+            setAcceptedRideData((prev: any) => ({
+              ...prev,
+              ...updatedRide,
+            }));
+          }
+
+
         } catch (e) {}
       }, 3000);
     }
     return () => { if (interval) clearInterval(interval); };
-  }, [acceptedRideData]);
+  }, [acceptedRideData?.id_ride]);
 
   const handleAcceptJoin = async (requestId: number) => {
     try {
@@ -263,6 +273,21 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
       const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
       await api.rides.acceptJoinRequest(requestId, user.id || user.id_user, 'driver');
       setJoinRequests(prev => prev.filter(req => req.id !== requestId));
+      
+      if (acceptedRideData?.id_ride) {
+        const updatedRide = await api.rides.getTracking(acceptedRideData.id_ride);
+        if (updatedRide && updatedRide.id_ride) {
+          setAcceptedRideData((prev: any) => ({
+            ...prev,
+            ...updatedRide,
+          }));
+        }
+      }      
+      
+      
+      
+      
+      
       alert('Đã chấp nhận yêu cầu ghép chuyến');
     } catch (e) {
       alert('Lỗi khi chấp nhận');

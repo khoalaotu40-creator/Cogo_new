@@ -61,28 +61,43 @@ useEffect(() => {
     if (acceptedRideData) {
       const fetchRoute = async () => {
         try {
-          let startLng, startLat, endLng, endLat;
-          
-          startLng = acceptedRideData.vehicle_location.longitude;
-          startLat = acceptedRideData.vehicle_location.latitude;
+          const waypoints: string[] = [];
 
-          if (acceptedRideData.status === 'Arriving') {
-            endLng = acceptedRideData.Diem_don ? acceptedRideData.Diem_don.lng : acceptedRideData.user_location.lng;
-            endLat = acceptedRideData.Diem_don ? acceptedRideData.Diem_don.lat : acceptedRideData.user_location.lat;
-          } else {
-            // In Progress
-            endLng = acceptedRideData.Diem_den ? acceptedRideData.Diem_den.lng : acceptedRideData.user_location.lng;
-            endLat = acceptedRideData.Diem_den ? acceptedRideData.Diem_den.lat : acceptedRideData.user_location.lat;
+          if (acceptedRideData.vehicle_location) {
+            const startLng = acceptedRideData.vehicle_location.longitude;
+            const startLat = acceptedRideData.vehicle_location.latitude;
+            if (startLng && startLat) waypoints.push(`${startLng},${startLat}`);
           }
 
-          const response = await fetch(
-            `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`
-          );
-          const data = await response.json();
-          if (data.routes && data.routes.length > 0) {
-            const route = data.routes[0];
-            const coords = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-            setRouteCoordinates(coords);
+          if (acceptedRideData.Diem_don && acceptedRideData.Diem_don.lng && acceptedRideData.Diem_don.lat) {
+            waypoints.push(`${acceptedRideData.Diem_don.lng},${acceptedRideData.Diem_don.lat}`);
+          }
+
+          if (Array.isArray(acceptedRideData.passengers_pickups)) {
+            acceptedRideData.passengers_pickups.forEach((p: any) => {
+              if (p && p.lng && p.lat) {
+                waypoints.push(`${p.lng},${p.lat}`);
+              }
+            });
+          }
+
+          if (acceptedRideData.Diem_den && acceptedRideData.Diem_den.lng && acceptedRideData.Diem_den.lat) {
+            waypoints.push(`${acceptedRideData.Diem_den.lng},${acceptedRideData.Diem_den.lat}`);
+          } else if (acceptedRideData.user_location?.lng && acceptedRideData.user_location?.lat) {
+            waypoints.push(`${acceptedRideData.user_location.lng},${acceptedRideData.user_location.lat}`);
+
+
+          }
+          if (waypoints.length >= 2) {
+            const response = await fetch(
+                `https://router.project-osrm.org/route/v1/driving/${waypoints.join(';')}?overview=full&geometries=geojson`
+            );
+            const data = await response.json();
+            if (data.routes && data.routes.length > 0) {
+              const route = data.routes[0];
+              const coords = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+              setRouteCoordinates(coords);
+            }
           }
         } catch (error) {
           console.error("Error fetching route:", error);
@@ -120,6 +135,11 @@ useEffect(() => {
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <Marker position={[startLat, startLng]} icon={vehicleIcon} />
               <Marker position={[endLat, endLng]} icon={acceptedRideData.status === 'Arriving' ? userIcon : destIcon} />
+              {Array.isArray(acceptedRideData.passengers_pickups) && acceptedRideData.passengers_pickups.map((p: any, idx: number) => (
+                p && p.lat && p.lng ? (
+                  <Marker key={idx} position={[p.lat, p.lng]} icon={userIcon} />
+                ) : null
+              ))}              
               <Polyline positions={routeCoordinates.length > 0 ? routeCoordinates : [
                 [startLat, startLng],
                 [endLat, endLng]
