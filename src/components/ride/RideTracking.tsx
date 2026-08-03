@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Car, Phone, MessageCircle, MapPin, Clock, Star, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Car, Phone, MessageCircle, MapPin, Clock, Star, CheckCircle, UserPlus } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { api } from '../../lib/api';
@@ -13,6 +13,10 @@ export default function RideTracking({ rideId, onBack }: RideTrackingProps) {
   const [trackingData, setTrackingData] = useState<any>(null);
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [eta, setEta] = useState<number | null>(null);
+
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const [acceptingRequest, setAcceptingRequest] = useState<number | null>(null);
+
 
   const vehicleIcon = L.divIcon({
     className: 'custom-vehicle-icon',
@@ -88,7 +92,22 @@ export default function RideTracking({ rideId, onBack }: RideTrackingProps) {
     
     fetchTracking();
     intervalId = setInterval(fetchTracking, 5000);
-    return () => clearInterval(intervalId);
+    
+  const handleAcceptJoin = async (requestId: number) => {
+    try {
+      setAcceptingRequest(requestId);
+      const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
+      await api.rides.acceptJoinRequest(requestId, user.id || user.id_user, 'passenger');
+      setJoinRequests(prev => prev.filter(req => req.id !== requestId));
+      alert('Đã chấp nhận yêu cầu ghép chuyến');
+    } catch (e) {
+      alert('Lỗi khi chấp nhận');
+    } finally {
+      setAcceptingRequest(null);
+    }
+  };
+
+  return () => clearInterval(intervalId);
   }, [rideId]);
 
   if (!trackingData) {

@@ -38,6 +38,35 @@ export const api = {
     }
   },
   rides: {
+    requestJoin: async (rideId: string | number, pickupLocation: Location, userId: string | number) => {
+      const response = await fetch(`/api/rides/${rideId}/join-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, pickupLocation })
+      });
+      if (!response.ok) throw new Error('Failed to request join');
+      return response.json();
+    },
+    getJoinRequestStatus: async (requestId: string | number) => {
+      const response = await fetch(`/api/rides/join-request/${requestId}`);
+      if (!response.ok) throw new Error('Failed to get request status');
+      return response.json();
+    },
+    getJoinRequestsForRide: async (rideId: string | number) => {
+      const response = await fetch(`/api/rides/${rideId}/join-requests`);
+      if (!response.ok) throw new Error('Failed to get requests');
+      return response.json();
+    },
+    acceptJoinRequest: async (requestId: string | number, approverId: string | number, role: 'driver' | 'passenger') => {
+      const response = await fetch(`/api/rides/join-request/${requestId}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approverId, role })
+      });
+      if (!response.ok) throw new Error('Failed to accept join request');
+      return response.json();
+    },
+
     create: async (userId: string, pickupLocation: Location, dropoffLocation: Location, typeRide: string) => {
       const response = await fetch('/api/rides', {
         method: 'POST',

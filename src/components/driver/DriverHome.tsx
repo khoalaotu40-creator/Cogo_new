@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { Ride, AcceptedRideData } from '../../types';
 import { api } from '../../lib/api';
 import { MapSection } from './MapSection';
@@ -25,6 +25,10 @@ export default function DriverHome({ onBack }: { onBack?: () => void }) {
   const currentUser = JSON.parse(localStorage.getItem('cogo_user') || '{}');
   const driverId = currentUser?.id_user || currentUser?.driver_id;
   const [currentTab, setCurrentTab] = useState<'home' | 'earnings'>('home');
+
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const [acceptingRequest, setAcceptingRequest] = useState<number | null>(null);
+
   const [showVehicleRegistration, setShowVehicleRegistration] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [isLocating, setIsLocating] = useState(false);

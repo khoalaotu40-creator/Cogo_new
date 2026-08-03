@@ -10,6 +10,11 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [pickupQuery, setPickupQuery] = useState('');
   const [availableRides, setAvailableRides] = useState<any[]>([]);
+
+  const [waitingForRide, setWaitingForRide] = useState<number | null>(null);
+  const [joinRequestId, setJoinRequestId] = useState<number | null>(null);
+  const [joinRequestStatus, setJoinRequestStatus] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   const [pickupResults, setPickupResults] = useState<Location[]>([]);
@@ -21,6 +26,52 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
   const dropoffRef = useRef<HTMLDivElement>(null);
 
   // Close suggestions when clicking outside
+  
+  useEffect(() => {
+    let interval: any;
+    if (joinRequestId && joinRequestStatus !== 'accepted') {
+      interval = setInterval(async () => {
+        try {
+          const res = await api.rides.getJoinRequestStatus(joinRequestId);
+          setJoinRequestStatus(res.status);
+          if (res.status === 'accepted') {
+             clearInterval(interval);
+             alert('Yêu cầu ghép chuyến đã được chấp nhận!');
+             setWaitingForRide(null);
+             setJoinRequestId(null);
+             setJoinRequestStatus(null);
+             onBack(); // go back or to the tracking view
+          }
+        } catch (e) {}
+      }, 3000);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [joinRequestId, joinRequestStatus]);
+
+  const handleJoinClick = (rideId: number) => {
+    const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
+    const userId = user.id || user.id_user;
+    if (!userId) return alert('Vui lòng đăng nhập');
+    
+    // get location and join
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+         const lat = pos.coords.latitude;
+         const lng = pos.coords.longitude;
+         try {
+           const res = await api.rides.requestJoin(rideId, { lat, lng, id: 'current', name: 'Vị trí hiện tại của tôi', address: 'Vị trí hiện tại' }, userId);
+           if (res.status === 'ok') {
+              setWaitingForRide(rideId);
+              setJoinRequestId(res.request.id);
+              setJoinRequestStatus('pending');
+           }
+         } catch (e) { alert('Lỗi khi gửi yêu cầu'); }
+      });
+    } else {
+       alert('Không thể lấy vị trí');
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (pickupRef.current && !pickupRef.current.contains(event.target as Node)) {
@@ -297,12 +348,12 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
                   Còn 1 chỗ
                 </div>
                 {ride.status === 'Requested' ? (
-                  <button className="bg-[#008f55] hover:bg-[#007a48] text-white px-6 py-2 rounded-full font-bold text-[14px] transition-colors shadow-sm">
+                  <button onClick={() => handleJoinClick(ride.id_ride)} className="bg-[#008f55] hover:bg-[#007a48] text-white px-6 py-2 rounded-full font-bold text-[14px] transition-colors shadow-sm">
                     Tham gia
                   </button>
                 ) : (
-                  <button disabled className="bg-gray-200 text-gray-500 px-6 py-2 rounded-full font-bold text-[14px] shadow-sm cursor-not-allowed">
-                    {ride.status === 'Arriving' ? 'Đang đón' : 'Đang diễn ra'}
+                  <button onClick={() => handleJoinClick(ride.id_ride)} className="bg-[#008f55] hover:bg-[#007a48] text-white px-6 py-2 rounded-full font-bold text-[14px] transition-colors shadow-sm">
+                    Tham gia
                   </button>
                 )}
               </div>
