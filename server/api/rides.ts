@@ -63,9 +63,9 @@ router.get('/available', async (req, res) => {
          driver.avatar_url as driver_avatar,
          driver.phone as driver_phone
        FROM rides r
-       JOIN users passenger ON r.id_user = passenger.id_user
-       LEFT JOIN vehicles v ON r.id_vehicle = v.id_vehicle
-       LEFT JOIN users driver ON v.id_user = driver.id_user
+       LEFT JOIN users passenger ON r.id_user = passenger.id_user
+       LEFT LEFT JOIN vehicles v ON r.id_vehicle = v.id_vehicle
+       LEFT LEFT JOIN users driver ON v.id_user = driver.id_user
        WHERE r.type_ride LIKE 'đi ngay%' AND r.status IN ('Requested', 'Arriving', 'In Progress')
        ORDER BY r.id_ride DESC`
     );
@@ -186,7 +186,7 @@ router.post('/accept', async (req, res) => {
         v.location as vehicle_location
       FROM rides r
       JOIN users u ON r.id_user = u.id_user
-      JOIN vehicles v ON v.id_vehicle = r.id_vehicle
+      LEFT JOIN vehicles v ON v.id_vehicle = r.id_vehicle
       WHERE r.id_ride = $1
     `, [id_ride]);
     
@@ -338,9 +338,9 @@ router.get('/tracking/:rideId', async (req, res) => {
         passenger.phone as passenger_phone,
         passenger.avatar_url as passenger_avatar
       FROM rides r
-      JOIN vehicles v ON r.id_vehicle = v.id_vehicle
-      JOIN users driver ON v.id_user = driver.id_user
-      JOIN users passenger ON r.id_user = passenger.id_user
+      LEFT JOIN vehicles v ON r.id_vehicle = v.id_vehicle
+      LEFT JOIN users driver ON v.id_user = driver.id_user
+      LEFT JOIN users passenger ON r.id_user = passenger.id_user
       WHERE r.id_ride = $1
     `, [rideId]);
     

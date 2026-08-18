@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+const fs = require('fs');
+const content = `import React, { useState } from 'react';
 import { Phone, User, FileText, Loader2, ArrowRight } from 'lucide-react';
 import { api } from '../../lib/api';
 
@@ -97,7 +98,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Điện thoại"
-              className={`w-full bg-[#1c1c1c] border border-transparent rounded-[16px] ${authMode === 'register' ? 'pl-12' : 'px-5'} py-4 text-[15px] font-medium text-white placeholder-white/50 outline-none focus:border-white/10 transition-all`}
+              className={\`w-full bg-[#1c1c1c] border border-transparent rounded-[16px] \${authMode === 'register' ? 'pl-12' : 'px-5'} py-4 text-[15px] font-medium text-white placeholder-white/50 outline-none focus:border-white/10 transition-all\`}
             />
           </div>
 
@@ -173,3 +174,5 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     </div>
   );
 }
+`
+fs.writeFileSync('src/components/auth/Login.tsx', content);

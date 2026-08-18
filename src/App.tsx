@@ -52,6 +52,14 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleNavigate = (e: CustomEvent<string>) => {
+      navigateTo(e.detail);
+    };
+    window.addEventListener('navigate', handleNavigate as EventListener);
+    return () => window.removeEventListener('navigate', handleNavigate as EventListener);
+  }, [activeTab]);
+
   const navigateTo = (tab: string) => {
     setPreviousTab(activeTab);
     setActiveTab(tab);
@@ -63,45 +71,18 @@ export default function Home() {
   };
 
   const renderHomeContent = () => (
-    <div className="flex-1 overflow-y-auto no-scrollbar bg-[#f8f9fa]">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Car className="w-[26px] h-[26px] text-[#008f55]" />
-          <span className="text-[20px] font-bold text-[#008f55] tracking-tight">Cogo</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => {
-            const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
-            if (user.driver_id) {
-              navigateTo('driver-home');
-            } else {
-              alert('Bạn cần đăng ký làm tài xế trước (trong mục Cài đặt)');
-            }
-          }} className="text-[#008f55] hover:opacity-80 transition-opacity relative">
-            <Car className="w-[22px] h-[22px] stroke-[2]" />
-          </button>
-          <button onClick={() => navigateTo('notifications')} className="text-[#008f55] hover:opacity-80 transition-opacity relative">
-            <Bell className="w-[22px] h-[22px] stroke-[2]" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-          </button>
-          <button onClick={() => navigateTo('rides')} className="text-[#008f55] hover:opacity-80 transition-opacity">
-            <List className="w-[22px] h-[22px] stroke-[2]" />
-          </button>
-          <button onClick={() => navigateTo('settings')} className="text-[#008f55] hover:opacity-80 transition-opacity">
-            <SettingsIcon className="w-[22px] h-[22px] text-[#008f55] stroke-[2]" />
-          </button>
-        </div>
-      </div>
-      
+    <div className="flex-1 overflow-hidden bg-[#121212] flex flex-col relative text-white h-full pb-[60px] sm:pb-[70px]">
+      {/* Feed */}
       <Feed onStart={() => navigateTo('available-rides')} />
+      
+      
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
       {/* Mobile Frame Container */}
-      <div className="w-full max-w-[420px] h-[100dvh] sm:h-[850px] bg-white sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-8 border-gray-900 mx-auto">
+      <div className="w-full max-w-[420px] h-[100dvh] sm:h-[850px] bg-[#121212] sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-8 border-gray-900 mx-auto">
         
         {activeTab === 'login' && <Login onLoginSuccess={() => navigateTo('home')} />}
         {activeTab === 'home' && renderHomeContent()}
@@ -121,15 +102,21 @@ export default function Home() {
 
         {/* Bottom Navigation */}
         {activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && activeTab !== 'driver-registration' && activeTab !== 'notifications' && activeTab !== 'driver-home' && (
-          <div className="absolute bottom-0 w-full bg-white flex items-center justify-between px-12 pt-3 pb-6 sm:pb-4 border-t border-gray-100 z-50">
+          <div className="absolute bottom-0 w-full bg-[#0a0a0a] flex items-center justify-between px-6 pt-3 pb-6 sm:pb-4 border-t border-[#222] z-50">
             <button 
               onClick={() => navigateTo('home')}
               className={`flex flex-col items-center justify-center gap-1 transition-all py-1 ${activeTab === 'home' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
-              <HomeIcon className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'home' ? 'text-[#008f55]' : 'text-gray-600'}`} />
-              <span className={`text-[11px] ${activeTab === 'home' ? 'font-bold text-[#008f55]' : 'font-medium text-gray-600'}`}>Trang chủ</span>
+              <HomeIcon className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'home' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
             </button>
             
+            <button 
+              onClick={() => navigateTo('rides')}
+              className={`flex flex-col items-center justify-center gap-1 transition-all py-1 ${activeTab === 'rides' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+            >
+              <List className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'rides' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
+            </button>
+
             <div className="relative -mt-6 flex justify-center">
               <button 
                 onClick={() => {
@@ -140,24 +127,31 @@ export default function Home() {
                 onPointerLeave={cancelPress}
                 className={`flex items-center justify-center shadow-lg transition-all duration-300 ${
                   isSos 
-                    ? 'w-24 h-24 bg-red-600 rounded-full scale-110 animate-pulse -mt-4 shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
-                    : 'w-12 h-12 bg-[#008f55] rounded-full hover:bg-[#007a48]'
+                    ? 'w-24 h-24 bg-red-600 rounded-[20px] scale-110 animate-pulse -mt-4 shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
+                    : 'w-[48px] h-[36px] bg-[#2ee6c2] rounded-[10px] hover:bg-[#20d0ad]'
                 }`}
               >
                 {isSos ? (
                   <span className="font-bold text-white text-2xl tracking-wider">SOS</span>
                 ) : (
-                  <Plus className="w-7 h-7 text-white stroke-[3]" />
+                  <Plus className="w-6 h-6 text-black stroke-[3]" />
                 )}
               </button>
             </div>
 
             <button 
+              onClick={() => navigateTo('notifications')}
+              className={`flex flex-col items-center justify-center gap-1 transition-all py-1 relative ${activeTab === 'notifications' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+            >
+              <Bell className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'notifications' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            <button 
               onClick={() => navigateTo('profile')}
               className={`flex flex-col items-center justify-center gap-1 transition-all py-1 ${activeTab === 'profile' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
-              <User className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'profile' ? 'text-[#008f55]' : 'text-gray-600'}`} />
-              <span className={`text-[11px] ${activeTab === 'profile' ? 'font-bold text-[#008f55]' : 'font-medium text-gray-600'}`}>Cá nhân</span>
+              <User className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'profile' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
             </button>
           </div>
         )}

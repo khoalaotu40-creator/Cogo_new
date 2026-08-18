@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+const fs = require('fs');
+let content = fs.readFileSync('src/components/ride/Rides.tsx', 'utf8');
+
+// The first patch script failed because of a template literal syntax error with backticks. Let's fix that.
+// Let's rewrite the entire file to make it cleaner and exact.
+const newContent = `import { useState, useEffect } from 'react';
 import { Car, MapPin, Loader2, Info } from 'lucide-react';
 import { api } from '../../lib/api';
 import RideTracking from './RideTracking';
@@ -44,7 +49,7 @@ export default function Rides({ onFindRide }: RidesProps) {
 
   if (selectedRide) {
     return (
-      <div className="absolute inset-0 z-[100] bg-[#121415] flex flex-col">
+      <div className="flex-1 absolute inset-0 z-50 bg-[#121415]">
         <RideTracking
           rideId={String(selectedRide.id_ride)}
           onBack={() => setSelectedRide(null)}
@@ -65,13 +70,13 @@ export default function Rides({ onFindRide }: RidesProps) {
       <div className="px-5 py-2">
         <div className="bg-[#1a1c1e] rounded-[16px] p-1 flex border border-white/5">
           <button 
-            className={`flex-1 py-3 text-[14px] font-bold rounded-[14px] transition-all ${rideSubTab === 'upcoming' ? 'bg-[#2ee6c2]/10 text-[#2ee6c2] border border-[#2ee6c2]/20 shadow-none' : 'text-gray-400 hover:text-gray-300'}`}
+            className={\`flex-1 py-3 text-[14px] font-bold rounded-[14px] transition-all \${rideSubTab === 'upcoming' ? 'bg-[#2ee6c2]/10 text-[#2ee6c2] border border-[#2ee6c2]/20 shadow-none' : 'text-gray-400 hover:text-gray-300'}\`}
             onClick={() => setRideSubTab('upcoming')}
           >
             Sắp tới
           </button>
           <button 
-            className={`flex-1 py-3 text-[14px] font-bold rounded-[14px] transition-all ${rideSubTab === 'history' ? 'bg-[#2ee6c2]/10 text-[#2ee6c2] border border-[#2ee6c2]/20 shadow-none' : 'text-gray-400 hover:text-gray-300'}`}
+            className={\`flex-1 py-3 text-[14px] font-bold rounded-[14px] transition-all \${rideSubTab === 'history' ? 'bg-[#2ee6c2]/10 text-[#2ee6c2] border border-[#2ee6c2]/20 shadow-none' : 'text-gray-400 hover:text-gray-300'}\`}
             onClick={() => setRideSubTab('history')}
           >
             Lịch sử
@@ -152,3 +157,6 @@ export default function Rides({ onFindRide }: RidesProps) {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/components/ride/Rides.tsx', newContent);

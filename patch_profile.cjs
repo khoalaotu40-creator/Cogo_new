@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+const content = `import React, { useState, useEffect } from 'react';
 import { Camera, Car, Plus, Pencil, Briefcase, GraduationCap, Home, MapPin, Heart, MoreHorizontal, X, Loader2, Waypoints, Bell, List, Settings as SettingsIcon, ShieldCheck, Lock, Image as ImageIcon, FileText, CheckCircle2 } from 'lucide-react';
 import { api } from '../../lib/api';
 
@@ -104,9 +105,9 @@ export default function Profile() {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    return `${Math.floor(diffHours / 24)} ngày trước`;
+    if (diffMins < 60) return \`\${diffMins} phút trước\`;
+    if (diffHours < 24) return \`\${diffHours} giờ trước\`;
+    return \`\${Math.floor(diffHours / 24)} ngày trước\`;
   };
 
   return (
@@ -167,9 +168,9 @@ export default function Profile() {
           <div className="flex items-center justify-center gap-3 mb-3">
             <button 
               onClick={() => setIsPrivateMode(!isPrivateMode)}
-              className={`w-12 h-6 rounded-full relative transition-colors ${isPrivateMode ? 'bg-[#2ee6c2]' : 'bg-gray-600'}`}
+              className={\`w-12 h-6 rounded-full relative transition-colors \${isPrivateMode ? 'bg-[#2ee6c2]' : 'bg-gray-600'}\`}
             >
-              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isPrivateMode ? 'left-7' : 'left-1'}`}></div>
+              <div className={\`absolute top-1 w-4 h-4 rounded-full bg-white transition-all \${isPrivateMode ? 'left-7' : 'left-1'}\`}></div>
             </button>
             <span className="text-white font-bold text-[15px] flex items-center gap-2">
               Chế độ cá nhân <ShieldCheck className="w-4 h-4 text-[#2ee6c2]" />
@@ -185,7 +186,7 @@ export default function Profile() {
         <div className="flex justify-center gap-4 mb-8">
           <button 
             onClick={() => setActiveTab('posts')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors ${activeTab === 'posts' ? 'bg-[#2a2a2a] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'}`}
+            className={\`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors \${activeTab === 'posts' ? 'bg-[#2a2a2a] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'}\`}
           >
             <FileText className="w-4 h-4" />
             Bài viết
@@ -193,7 +194,7 @@ export default function Profile() {
           </button>
           <button 
             onClick={() => setActiveTab('photos')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors ${activeTab === 'photos' ? 'bg-[#2a2a2a] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'}`}
+            className={\`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors \${activeTab === 'photos' ? 'bg-[#2a2a2a] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'}\`}
           >
             <ImageIcon className="w-4 h-4" />
             Ảnh
@@ -251,3 +252,5 @@ export default function Profile() {
     </div>
   );
 }
+`
+fs.writeFileSync('src/components/user/Profile.tsx', content);
