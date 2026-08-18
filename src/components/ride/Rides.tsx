@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Car, MapPin, Loader2 } from 'lucide-react';
 import { api } from '../../lib/api';
-import RouteMap from './RouteMap';
+import RideTracking from './RideTracking';
 
 interface RidesProps {
   onFindRide: () => void;
@@ -42,12 +42,9 @@ export default function Rides({ onFindRide }: RidesProps) {
   if (selectedRide) {
     return (
       <div className="flex-1 absolute inset-0 z-50 bg-white">
-        <RouteMap
-          pickupLocation={selectedRide.Diem_don || selectedRide.pickup_location || { lat: 10.8231, lng: 106.6297, name: "Chưa xác định", address: "Chưa xác định" }}
-          dropoffLocation={selectedRide.Diem_den || { lat: 10.8231, lng: 106.6297, name: "Chưa xác định", address: "Chưa xác định" }}
+        <RideTracking
+          rideId={String(selectedRide.id_ride)}
           onBack={() => setSelectedRide(null)}
-          mode="view"
-          ride={selectedRide}
         />
       </div>
     );

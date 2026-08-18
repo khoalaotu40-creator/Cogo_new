@@ -241,15 +241,30 @@ export default function RideTracking({ rideId, onBack }: RideTrackingProps) {
 
             <h3 className="font-bold text-gray-800 mb-3 text-[15px]">Danh sách người trên xe</h3>
             <div className="flex flex-col gap-3 mb-6">
-               {/* Just showing the requester as passenger for now, since it's a 1-on-1 ride system */}
                <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
                  <img src={trackingData.passenger_avatar || 'https://i.pravatar.cc/150?img=12'} className="w-12 h-12 rounded-full object-cover" />
                  <div className="flex-1">
                    <h3 className="font-bold text-[15px] text-gray-900">{trackingData.passenger_name}</h3>
                    <p className="text-[13px] text-gray-500">{trackingData.passenger_phone}</p>
                  </div>
-                 <div className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[12px] font-bold">Hành khách</div>
+                 <div className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[12px] font-bold">Hành khách chính</div>
                </div>
+
+               {Array.isArray(trackingData.joined_passengers) && trackingData.joined_passengers.map((jp: any, index: number) => (
+                 <div key={jp.id || index} className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                   <img src={jp.avatar_url || 'https://i.pravatar.cc/150?img=13'} className="w-12 h-12 rounded-full object-cover" />
+                   <div className="flex-1">
+                     <h3 className="font-bold text-[15px] text-gray-900">{jp.user_name || 'Hành khách ghép'}</h3>
+                     <p className="text-[13px] text-gray-500">{jp.phone}</p>
+                     {jp.pickup_location && (jp.pickup_location.name || jp.pickup_location.address) && (
+                       <p className="text-[12px] text-emerald-600 font-medium mt-0.5">
+                         Điểm đón: {jp.pickup_location.name || jp.pickup_location.address}
+                       </p>
+                     )}
+                   </div>
+                   <div className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[12px] font-bold">Người ghép xe</div>
+                 </div>
+               ))}
             </div>
 
             <button onClick={onBack} className="w-full bg-[#00A550] text-white font-bold py-3.5 rounded-xl text-[15px] transition-colors hover:bg-[#008A43]">

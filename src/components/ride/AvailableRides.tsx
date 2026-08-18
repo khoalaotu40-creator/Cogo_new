@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Search, Star, MapPin, User, ChevronRight, Navigation } from 'lucide-react';
 import { api, Location } from '../../lib/api';
+import RideTracking from './RideTracking';
 
 interface AvailableRidesProps {
   onBack: () => void;
@@ -14,6 +15,7 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
   const [waitingForRide, setWaitingForRide] = useState<number | null>(null);
   const [joinRequestId, setJoinRequestId] = useState<number | null>(null);
   const [joinRequestStatus, setJoinRequestStatus] = useState<string | null>(null);
+  const [acceptedRideId, setAcceptedRideId] = useState<number | string | null>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -36,17 +38,17 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
           setJoinRequestStatus(res.status);
           if (res.status === 'accepted') {
              clearInterval(interval);
-             alert('Yêu cầu ghép chuyến đã được chấp nhận!');
+             alert('Yêu cầu ghép chuyến đã được chấp nhận! Chuyển đến màn hình theo dõi chuyến đi...');
+             setAcceptedRideId(waitingForRide);
              setWaitingForRide(null);
              setJoinRequestId(null);
              setJoinRequestStatus(null);
-             onBack(); // go back or to the tracking view
           }
         } catch (e) {}
       }, 3000);
     }
     return () => { if (interval) clearInterval(interval); };
-  }, [joinRequestId, joinRequestStatus]);
+  }, [joinRequestId, joinRequestStatus, waitingForRide]);
 
   const handleJoinClick = (rideId: number) => {
     const user = JSON.parse(localStorage.getItem('cogo_user') || '{}');
@@ -206,6 +208,36 @@ export default function AvailableRides({ onBack }: AvailableRidesProps) {
     
     return matchesDest && matchesPickup;
   });
+
+  if (acceptedRideId) {
+    return (
+      <RideTracking 
+        rideId={String(acceptedRideId)} 
+        onBack={() => {
+          setAcceptedRideId(null);
+          onBack();
+        }} 
+      />
+    );
+  }
+
+  if (waitingForRide) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-white p-6 relative">
+        <button onClick={() => { setWaitingForRide(null); setJoinRequestId(null); }} className="absolute top-6 left-4 p-2">
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
+        </button>
+        <div className="w-24 h-24 rounded-full bg-emerald-50 flex items-center justify-center mb-6 relative">
+           <Navigation className="w-10 h-10 text-[#008f55] animate-pulse" />
+           <div className="absolute inset-0 rounded-full border-4 border-[#008f55] opacity-20 animate-ping"></div>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Đang chờ phản hồi</h2>
+        <p className="text-gray-500 text-center mb-8 max-w-xs text-[14px]">
+           Đã gửi vị trí đón. Đang chờ tài xế và người dùng trên xe đồng ý ghép chuyến...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-[#f0f2f5] flex flex-col h-full relative">

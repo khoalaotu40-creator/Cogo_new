@@ -380,6 +380,34 @@ router.get('/tracking/:rideId', async (req, res) => {
         }
     }
     
+    // Get accepted joined passengers
+    try {
+      const joinedRes = await pool.query(
+        `SELECT r.id, r.user_id, u.name as user_name, u.avatar_url, u.phone, r.pickup_location 
+         FROM ride_join_requests r 
+         JOIN users u ON r.user_id = u.id_user 
+         WHERE r.id_ride = $1 AND r.status = 'accepted'`,
+        [rideId]
+      );
+
+      data.joined_passengers = joinedRes.rows.map(row => {
+        let pickup = row.pickup_location;
+        if (typeof pickup === 'string') {
+          try { pickup = JSON.parse(pickup); } catch (e) {}
+        }
+        return {
+          id: row.id,
+          user_id: row.user_id,
+          user_name: row.user_name || 'Hành khách ghép',
+          avatar_url: row.avatar_url || 'https://i.pravatar.cc/150?img=13',
+          phone: row.phone || 'Chưa có SĐT',
+          pickup_location: pickup
+        };
+      });
+    } catch (e) {
+      data.joined_passengers = [];
+    }
+
     res.json(data);
   } catch (error) {
     console.error('Get tracking info error:', error);
