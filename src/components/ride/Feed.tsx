@@ -153,13 +153,13 @@ export default function Feed({ onStart }: FeedProps) {
                   <div className="absolute inset-0 bg-black/40" />
                 </div>
               ) : (post.pickupLocation && post.dropoffLocation) ? (
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+                <div className="absolute inset-0 z-0 opacity-60 pointer-events-auto cursor-pointer" onClick={() => { if (post.pickupLocation && post.dropoffLocation) setViewingRouteForPost(post); }}>
                   <PostBackgroundMap 
                     pickupLocation={post.pickupLocation} 
                     dropoffLocation={post.dropoffLocation} 
                     isJoined={String(currentUser?.id) === String(post.user?.id) || joinStatus[post.id] === 'accepted' || joinStatus[post.id] === 'joined'} 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#121212]/50 to-[#121212] z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#121212]/50 to-[#121212] z-10 pointer-events-none" />
                 </div>
               ) : null}
               

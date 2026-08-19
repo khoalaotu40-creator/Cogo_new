@@ -71,7 +71,7 @@ export default function Home() {
   };
 
   const renderHomeContent = () => (
-    <div className="flex-1 overflow-hidden bg-[#121212] flex flex-col relative text-white h-full pb-[60px] sm:pb-[70px]">
+    <div className="flex-1 overflow-hidden bg-[#f9f9ff] flex flex-col relative text-[#141b2c] h-full pb-[60px] sm:pb-[70px]">
       {/* Feed */}
       <Feed onStart={() => navigateTo('available-rides')} />
       
@@ -82,7 +82,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
       {/* Mobile Frame Container */}
-      <div className="w-full max-w-[420px] h-[100dvh] sm:h-[850px] bg-[#121212] sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-8 border-gray-900 mx-auto">
+      <div className="w-full max-w-[420px] h-[100dvh] sm:h-[850px] bg-[#f9f9ff] sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-8 border-gray-900 mx-auto">
         
         {activeTab === 'login' && <Login onLoginSuccess={() => navigateTo('home')} />}
         {activeTab === 'home' && renderHomeContent()}
@@ -102,19 +102,21 @@ export default function Home() {
 
         {/* Bottom Navigation */}
         {activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && activeTab !== 'driver-registration' && activeTab !== 'notifications' && activeTab !== 'driver-home' && (
-          <div className="absolute bottom-0 w-full bg-[#0a0a0a] flex items-center justify-between px-6 pt-3 pb-6 sm:pb-4 border-t border-[#222] z-50">
+          <div className="absolute bottom-0 w-full bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex items-center justify-between px-6 pt-3 pb-6 sm:pb-4 z-50 rounded-t-3xl border-t border-gray-100">
             <button 
               onClick={() => navigateTo('home')}
               className={`flex flex-col items-center justify-center gap-1 transition-all py-1 ${activeTab === 'home' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
-              <HomeIcon className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'home' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
+              <HomeIcon className={`w-[24px] h-[24px] ${activeTab === 'home' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`} fill={activeTab === 'home' ? 'currentColor' : 'none'} strokeWidth={activeTab === 'home' ? 0 : 2} />
+              <span className={`text-[12px] font-medium ${activeTab === 'home' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`}>Home</span>
             </button>
             
             <button 
               onClick={() => navigateTo('rides')}
               className={`flex flex-col items-center justify-center gap-1 transition-all py-1 ${activeTab === 'rides' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
-              <List className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'rides' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
+              <List className={`w-[24px] h-[24px] ${activeTab === 'rides' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`} strokeWidth={2.5} />
+              <span className={`text-[12px] font-medium ${activeTab === 'rides' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`}>Chuyến</span>
             </button>
 
             <div className="relative -mt-6 flex justify-center">
@@ -125,16 +127,12 @@ export default function Home() {
                 onPointerDown={startPress}
                 onPointerUp={cancelPress}
                 onPointerLeave={cancelPress}
-                className={`flex items-center justify-center shadow-lg transition-all duration-300 ${
-                  isSos 
-                    ? 'w-24 h-24 bg-red-600 rounded-[20px] scale-110 animate-pulse -mt-4 shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
-                    : 'w-[48px] h-[36px] bg-[#2ee6c2] rounded-[10px] hover:bg-[#20d0ad]'
-                }`}
+                className={`flex items-center justify-center shadow-lg transition-all duration-300 ${isSos ? 'w-24 h-24 bg-red-600 rounded-full scale-110 animate-pulse -mt-4 shadow-[0_0_20px_rgba(220,38,38,0.6)]' : 'w-[52px] h-[52px] bg-[#00875a] rounded-full hover:bg-[#006b47] -mt-4'}`}
               >
                 {isSos ? (
-                  <span className="font-bold text-white text-2xl tracking-wider">SOS</span>
+                  <span className="font-bold text-[#141b2c] text-2xl tracking-wider">SOS</span>
                 ) : (
-                  <Plus className="w-6 h-6 text-black stroke-[3]" />
+                  <Plus className="w-7 h-7 text-[#141b2c] stroke-[2.5]" />
                 )}
               </button>
             </div>
@@ -143,15 +141,17 @@ export default function Home() {
               onClick={() => navigateTo('notifications')}
               className={`flex flex-col items-center justify-center gap-1 transition-all py-1 relative ${activeTab === 'notifications' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
-              <Bell className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'notifications' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <Bell className={`w-[24px] h-[24px] ${activeTab === 'notifications' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`} strokeWidth={2.5} />
+              <span className="absolute top-1 right-3 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className={`text-[12px] font-medium ${activeTab === 'notifications' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`}>Thông báo</span>
             </button>
 
             <button 
               onClick={() => navigateTo('profile')}
               className={`flex flex-col items-center justify-center gap-1 transition-all py-1 ${activeTab === 'profile' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
-              <User className={`w-[24px] h-[24px] stroke-[2.5] ${activeTab === 'profile' ? 'text-[#2ee6c2]' : 'text-gray-400'}`} />
+              <User className={`w-[24px] h-[24px] ${activeTab === 'profile' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`} strokeWidth={2.5} />
+              <span className={`text-[12px] font-medium ${activeTab === 'profile' ? 'text-[#006b47]' : 'text-[#4A4A4A]'}`}>Profile</span>
             </button>
           </div>
         )}

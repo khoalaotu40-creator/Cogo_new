@@ -110,9 +110,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#121415] h-full pb-[80px] no-scrollbar relative font-sans">
+    <div className="flex-1 overflow-y-auto bg-[#f9f9ff] h-full pb-[80px] no-scrollbar relative font-sans">
       {/* Background Gradient */}
-      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-[#2ee6c2]/15 to-transparent pointer-events-none"></div>
+      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-[#00875a]/15 to-transparent pointer-events-none"></div>
 
       {/* Top Header Icons for Profile */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
@@ -125,14 +125,14 @@ export default function Profile() {
               alert('Bạn cần đăng ký làm tài xế trước (trong mục Cài đặt)');
             }
           }} 
-          className="bg-black/30 p-2 rounded-full text-white hover:bg-black/40 transition-colors relative"
+          className="bg-white/60 p-2 rounded-full text-[#141b2c] hover:bg-white/80 shadow-sm border border-[#bdcac0]/30 transition-colors relative"
         >
           <Car className="w-5 h-5" />
         </button>
-        <button onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'rides' }))} className="bg-black/30 p-2 rounded-full text-white hover:bg-black/40 transition-colors">
+        <button onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'rides' }))} className="bg-white/60 p-2 rounded-full text-[#141b2c] hover:bg-white/80 shadow-sm border border-[#bdcac0]/30 transition-colors">
           <List className="w-5 h-5" />
         </button>
-        <button onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))} className="bg-black/30 p-2 rounded-full text-white hover:bg-black/40 transition-colors">
+        <button onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))} className="bg-white/60 p-2 rounded-full text-[#141b2c] hover:bg-white/80 shadow-sm border border-[#bdcac0]/30 transition-colors">
           <SettingsIcon className="w-5 h-5" />
         </button>
       </div>
@@ -141,41 +141,41 @@ export default function Profile() {
         
         {/* Avatar */}
         <div className="relative mb-4">
-          <div className="w-[100px] h-[100px] rounded-full p-[3px] bg-gradient-to-br from-gray-700 to-gray-900 shadow-xl">
+          <div className="w-[100px] h-[100px] rounded-full p-[3px] bg-gradient-to-br from-[#00875a] to-[#006b47] shadow-xl">
             <img 
               src={avatar} 
               alt="Avatar" 
-              className="w-full h-full rounded-full object-cover border-2 border-[#121415]"
+              className="w-full h-full rounded-full object-cover border-2 border-[#f9f9ff]"
             />
           </div>
-          <div className="absolute -bottom-1 -right-1 bg-[#1a1c1e] p-1.5 rounded-full border-2 border-[#121415]">
-            <ShieldCheck className="w-5 h-5 text-gray-400" />
+          <div className="absolute -bottom-1 -right-1 bg-[#e9edff] p-1.5 rounded-full border-2 border-[#f9f9ff]">
+            <ShieldCheck className="w-5 h-5 text-[#006b47]" />
           </div>
         </div>
 
         {/* Info */}
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-1.5 mb-1.5">
-            <h1 className="text-[22px] font-bold text-white tracking-tight">{user.name || "Người dùng"}</h1>
+            <h1 className="text-[22px] font-bold text-[#141b2c] tracking-tight font-[Hanken Grotesk]">{user.name || "Người dùng"}</h1>
             <CheckCircle2 className="w-5 h-5 text-[#3b82f6] fill-current" />
           </div>
-          <p className="text-[13px] text-gray-400 font-medium">{user.intro_text || "Đại học Công Nghệ Thông Tin ĐHQG (UIT)"}</p>
+          <p className="text-[13px] text-[#3e4942] font-medium font-[Inter]">{user.intro_text || "Đại học Công Nghệ Thông Tin ĐHQG (UIT)"}</p>
         </div>
 
         {/* Private Mode Toggle Block */}
-        <div className="w-full bg-[#1c1c1c] rounded-[24px] p-5 mb-6 border border-white/5">
+        <div className="w-full bg-[#ffffff] rounded-[24px] p-5 mb-6 border border-[#bdcac0]/30 shadow-[0_4px_24px_rgba(0,107,71,0.08)]">
           <div className="flex items-center justify-center gap-3 mb-3">
             <button 
               onClick={() => setIsPrivateMode(!isPrivateMode)}
-              className={`w-12 h-6 rounded-full relative transition-colors ${isPrivateMode ? 'bg-[#2ee6c2]' : 'bg-gray-600'}`}
+              className={`w-12 h-6 rounded-full relative transition-colors ${isPrivateMode ? 'bg-[#00875a]' : 'bg-[#dbe2f9]'}`}
             >
               <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isPrivateMode ? 'left-7' : 'left-1'}`}></div>
             </button>
-            <span className="text-white font-bold text-[15px] flex items-center gap-2">
+            <span className="text-[#141b2c] font-bold text-[15px] flex items-center gap-2">
               Chế độ cá nhân <ShieldCheck className="w-4 h-4 text-[#2ee6c2]" />
             </span>
           </div>
-          <p className="text-[12px] text-gray-400 text-center leading-relaxed px-4">
+          <p className="text-[12px] text-[#3e4942] text-center leading-relaxed px-4">
             Trang cá nhân của bạn đã ở chế độ private<br/>
             Only followers can see your content.
           </p>
@@ -185,7 +185,7 @@ export default function Profile() {
         <div className="flex justify-center gap-4 mb-8">
           <button 
             onClick={() => setActiveTab('posts')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors ${activeTab === 'posts' ? 'bg-[#2a2a2a] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors ${activeTab === 'posts' ? 'bg-[#e9edff] text-[#006b47]' : 'bg-transparent text-[#6e7a71] hover:text-[#3e4942]'}`}
           >
             <FileText className="w-4 h-4" />
             Bài viết
@@ -193,7 +193,7 @@ export default function Profile() {
           </button>
           <button 
             onClick={() => setActiveTab('photos')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors ${activeTab === 'photos' ? 'bg-[#2a2a2a] text-white' : 'bg-transparent text-gray-500 hover:text-gray-300'}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-colors ${activeTab === 'photos' ? 'bg-[#e9edff] text-[#006b47]' : 'bg-transparent text-[#6e7a71] hover:text-[#3e4942]'}`}
           >
             <ImageIcon className="w-4 h-4" />
             Ảnh
@@ -205,39 +205,39 @@ export default function Profile() {
         <div className="w-full">
           {activeTab === 'photos' ? (
             <div className="flex flex-col items-center justify-center py-12 opacity-30">
-              <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4">
-                <Lock className="w-8 h-8 text-white/40" />
+              <div className="w-16 h-16 bg-[#e9edff] rounded-2xl flex items-center justify-center mb-4">
+                <Lock className="w-8 h-8 text-[#6e7a71]" />
               </div>
-              <p className="text-white/50 text-sm">Chưa có hình ảnh nào</p>
+              <p className="text-[#3e4942] text-sm">Chưa có hình ảnh nào</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4 w-full">
               {userPosts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 opacity-30">
-                  <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4">
-                    <Lock className="w-8 h-8 text-white/40" />
+                  <div className="w-16 h-16 bg-[#e9edff] rounded-2xl flex items-center justify-center mb-4">
+                    <Lock className="w-8 h-8 text-[#6e7a71]" />
                   </div>
-                  <p className="text-white/50 text-sm">Chưa có bài viết nào</p>
+                  <p className="text-[#3e4942] text-sm">Chưa có bài viết nào</p>
                 </div>
               ) : (
                 userPosts.map(post => (
-                  <div key={post.id} className="bg-[#1c1c1c] rounded-[20px] p-4 border border-white/5 w-full text-left">
+                  <div key={post.id} className="bg-[#ffffff] rounded-[20px] p-4 border border-[#bdcac0]/30 shadow-[0_4px_24px_rgba(0,107,71,0.08)] w-full text-left">
                     <div className="flex items-center gap-3 mb-3">
                       <img src={avatar} className="w-10 h-10 rounded-full object-cover" />
                       <div>
-                        <div className="text-white font-semibold text-[14.5px]">{user.name}</div>
-                        <div className="text-gray-500 text-[12px]">{formatTimeAgo(post.createdAt)}</div>
+                        <div className="text-[#141b2c] font-semibold text-[14.5px]">{user.name}</div>
+                        <div className="text-[#6e7a71] text-[12px]">{formatTimeAgo(post.createdAt)}</div>
                       </div>
                     </div>
-                    <p className="text-white/90 text-[14.5px] leading-relaxed mb-3">{post.content}</p>
-                    <div className="bg-[#2a2a2a] rounded-[12px] p-3 border border-white/5">
+                    <p className="text-[#141b2c] text-[14.5px] leading-relaxed mb-3">{post.content}</p>
+                    <div className="bg-[#f1f3ff] rounded-[12px] p-3 border border-[#dbe2f9]">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded-full border-2 border-[#2ee6c2]"></div>
-                        <span className="text-gray-300 text-[13px]">{post.departurePoint}</span>
+                        <div className="w-3 h-3 rounded-full border-2 border-[#00875a]"></div>
+                        <span className="text-[#3e4942] text-[13px]">{post.departurePoint}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-[#2ee6c2]"></div>
-                        <span className="text-gray-300 text-[13px]">{post.destinationPoint}</span>
+                        <div className="w-3 h-3 rounded-full bg-[#00875a]"></div>
+                        <span className="text-[#3e4942] text-[13px]">{post.destinationPoint}</span>
                       </div>
                     </div>
                   </div>
