@@ -46,10 +46,10 @@ export default function Profile() {
     setIsSubmitting(true);
     try {
       const newPost = await api.posts.create({
-        userId: user.id || user.id_user,
+        user_id: Number(user.id || user.id_user),
         content: postContent,
-        departurePoint: departurePoint || 'Không xác định',
-        destinationPoint: destinationPoint || 'Không xác định'
+        departure_point: departurePoint || 'Không xác định',
+        destination_point: destinationPoint || 'Không xác định'
       });
       setUserPosts([newPost, ...userPosts]);
       setIsCreatingPost(false);
@@ -115,7 +115,16 @@ export default function Profile() {
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-[#00875a]/15 to-transparent pointer-events-none"></div>
 
       {/* Top Header Icons for Profile */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2.5">
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'notifications' }))}
+          className="bg-white/80 p-2 rounded-full text-[#141b2c] hover:bg-white shadow-sm border border-[#bdcac0]/30 transition-colors relative"
+          title="Thông báo"
+        >
+          <Bell className="w-5 h-5 text-[#141b2c]" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+
         <button 
           onClick={() => {
             const storedUser = JSON.parse(localStorage.getItem('cogo_user') || '{}');
@@ -125,14 +134,25 @@ export default function Profile() {
               alert('Bạn cần đăng ký làm tài xế trước (trong mục Cài đặt)');
             }
           }} 
-          className="bg-white/60 p-2 rounded-full text-[#141b2c] hover:bg-white/80 shadow-sm border border-[#bdcac0]/30 transition-colors relative"
+          className="bg-white/80 p-2 rounded-full text-[#141b2c] hover:bg-white shadow-sm border border-[#bdcac0]/30 transition-colors relative"
+          title="Chế độ tài xế"
         >
           <Car className="w-5 h-5" />
         </button>
-        <button onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'rides' }))} className="bg-white/60 p-2 rounded-full text-[#141b2c] hover:bg-white/80 shadow-sm border border-[#bdcac0]/30 transition-colors">
+
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'rides' }))} 
+          className="bg-white/80 p-2 rounded-full text-[#141b2c] hover:bg-white shadow-sm border border-[#bdcac0]/30 transition-colors"
+          title="Chuyến của tôi"
+        >
           <List className="w-5 h-5" />
         </button>
-        <button onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))} className="bg-white/60 p-2 rounded-full text-[#141b2c] hover:bg-white/80 shadow-sm border border-[#bdcac0]/30 transition-colors">
+
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))} 
+          className="bg-white/80 p-2 rounded-full text-[#141b2c] hover:bg-white shadow-sm border border-[#bdcac0]/30 transition-colors"
+          title="Cài đặt"
+        >
           <SettingsIcon className="w-5 h-5" />
         </button>
       </div>

@@ -168,8 +168,8 @@ export default function JoinRequestModal({ post, currentUser, onClose, onSuccess
   const isSeekingRide = post.content.includes('Cần');
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-[24px] sm:rounded-[24px] overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-4">
+    <div className="absolute inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 overflow-hidden animate-in fade-in duration-200">
+      <div className="bg-white w-full rounded-t-[24px] overflow-hidden flex flex-col max-h-[85%] animate-in slide-in-from-bottom-8">
         <div className="px-4 py-3 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <h3 className="font-bold text-[18px] text-gray-900">Chi tiết & Xác nhận</h3>
           <button 
@@ -373,7 +373,7 @@ export default function JoinRequestModal({ post, currentUser, onClose, onSuccess
           <button 
             onClick={handleJoinConfirm}
             disabled={isSubmitting}
-            className="w-full bg-[#008f55] text-white font-bold text-[16px] py-3.5 rounded-full shadow-md hover:bg-[#007a48] transition-colors flex items-center justify-center disabled:opacity-70"
+            className="w-full bg-[#1a6d00] text-white font-bold text-[16px] py-3.5 rounded-full shadow-md hover:bg-[#145d00] transition-colors flex items-center justify-center disabled:opacity-70"
           >
             {isSubmitting ? (
               <>
