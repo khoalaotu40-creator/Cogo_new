@@ -3,16 +3,30 @@ import { Phone, User, FileText, Loader2, ArrowRight, ShieldCheck, Sparkles } fro
 import { api } from '../../lib/api';
 
 interface LoginProps {
+  initialMode?: 'login' | 'register';
+  onModeChange?: (mode: 'login' | 'register') => void;
   onLoginSuccess: (user: any) => void;
 }
 
-export default function Login({ onLoginSuccess }: LoginProps) {
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+export default function Login({ initialMode = 'login', onModeChange, onLoginSuccess }: LoginProps) {
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(initialMode);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
   const [introText, setIntroText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    if (initialMode && initialMode !== authMode) {
+      setAuthMode(initialMode);
+    }
+  }, [initialMode]);
+
+  const switchMode = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    setError('');
+    onModeChange?.(mode);
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,22 +60,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
   return (
     <div className="flex-1 bg-[#ffffff] flex flex-col h-full relative overflow-y-auto font-sans text-[#141b2c] select-none">
-      {/* Background Soft Glow */}
-      <div className="absolute top-0 left-0 right-0 h-72 bg-gradient-to-b from-[#e6f2ec]/60 to-transparent pointer-events-none" />
-
       <div className="flex-1 flex flex-col justify-between px-6 pt-12 pb-8 relative z-10">
         
         {/* Top Header & Brand */}
         <div>
           <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-[12px] bg-[#006b47] flex items-center justify-center text-white font-bold text-[18px] shadow-sm">
-                C
-              </div>
-              <span className="font-extrabold text-[22px] tracking-tight text-[#006b47]">
-                Cogo
-              </span>
-            </div>
+            <span className="font-extrabold text-[26px] tracking-tight text-[#006b47]">
+              Cogo
+            </span>
 
             <div className="flex items-center gap-1 bg-[#e6f2ec] text-[#006b47] px-2.5 py-1 rounded-full text-[11.5px] font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -85,7 +91,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <div className="bg-[#f0f2f1] p-1 rounded-[16px] flex items-center mb-6">
             <button
               type="button"
-              onClick={() => { setAuthMode('login'); setError(''); }}
+              onClick={() => switchMode('login')}
               className={`flex-1 py-2.5 text-[13.5px] font-bold rounded-[13px] transition-all ${
                 authMode === 'login'
                   ? 'bg-white text-[#006b47] shadow-xs'
@@ -96,7 +102,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             </button>
             <button
               type="button"
-              onClick={() => { setAuthMode('register'); setError(''); }}
+              onClick={() => switchMode('register')}
               className={`flex-1 py-2.5 text-[13.5px] font-bold rounded-[13px] transition-all ${
                 authMode === 'register'
                   ? 'bg-white text-[#006b47] shadow-xs'

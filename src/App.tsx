@@ -15,10 +15,73 @@ import Messages from './components/user/Messages';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [previousTab, setPreviousTab] = useState('login');
   const [hideFooter, setHideFooter] = useState(false);
   const [isSos, setIsSos] = useState(false);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const getUrlForTab = (tab: string, mode: 'login' | 'register' = authMode) => {
+    if (tab === 'login') {
+      return mode === 'register' ? '/register' : '/login';
+    }
+    if (tab === 'register') {
+      return '/register';
+    }
+
+    let userQuery = '';
+    try {
+      const savedUser = JSON.parse(localStorage.getItem('cogo_user') || '{}');
+      const userId = savedUser.id || savedUser.id_user;
+      if (userId) {
+        userQuery = `?id=${userId}`;
+      }
+    } catch {}
+
+    switch (tab) {
+      case 'home':
+        return `/home${userQuery}`;
+      case 'rides':
+        return `/rides${userQuery}`;
+      case 'available-rides':
+        return `/available-rides${userQuery}`;
+      case 'find-ride':
+        return `/find-ride${userQuery}`;
+      case 'messages':
+        return `/messages${userQuery}`;
+      case 'profile':
+        return `/profile${userQuery}`;
+      case 'settings':
+        return `/settings${userQuery}`;
+      case 'notifications':
+        return `/notifications${userQuery}`;
+      case 'driver-home':
+        return `/driver${userQuery}`;
+      case 'driver-registration':
+        return `/driver-registration${userQuery}`;
+      default:
+        return `/${tab}${userQuery}`;
+    }
+  };
+
+  const parseUrlToTab = (pathname: string): { tab: string; mode: 'login' | 'register' } => {
+    const cleanPath = pathname.replace(/\/+$/, '') || '/';
+    
+    if (cleanPath === '/login') return { tab: 'login', mode: 'login' };
+    if (cleanPath === '/register') return { tab: 'login', mode: 'register' };
+    if (cleanPath === '/home' || cleanPath === '/') return { tab: 'home', mode: 'login' };
+    if (cleanPath === '/rides') return { tab: 'rides', mode: 'login' };
+    if (cleanPath === '/available-rides') return { tab: 'available-rides', mode: 'login' };
+    if (cleanPath === '/find-ride') return { tab: 'find-ride', mode: 'login' };
+    if (cleanPath === '/messages') return { tab: 'messages', mode: 'login' };
+    if (cleanPath === '/profile') return { tab: 'profile', mode: 'login' };
+    if (cleanPath === '/settings') return { tab: 'settings', mode: 'login' };
+    if (cleanPath === '/notifications') return { tab: 'notifications', mode: 'login' };
+    if (cleanPath === '/driver' || cleanPath === '/driver-home') return { tab: 'driver-home', mode: 'login' };
+    if (cleanPath === '/driver-registration') return { tab: 'driver-registration', mode: 'login' };
+
+    return { tab: 'home', mode: 'login' };
+  };
 
   const startPress = () => {
     pressTimer.current = setTimeout(() => {
@@ -34,24 +97,48 @@ export default function Home() {
     setIsSos(false);
   };
 
-
+  // Initialize and parse initial URL
   useEffect(() => {
     const savedUserStr = localStorage.getItem('cogo_user');
+    let hasValidUser = false;
     if (savedUserStr) {
       try {
         const savedUser = JSON.parse(savedUserStr);
         const userId = savedUser.id || savedUser.id_user;
-        if (isNaN(Number(userId))) {
-          // Invalid legacy user
-          localStorage.removeItem('cogo_user');
+        if (!isNaN(Number(userId)) && userId) {
+          hasValidUser = true;
         } else {
-          setActiveTab('home');
-          setPreviousTab('home');
+          localStorage.removeItem('cogo_user');
         }
       } catch (e) {
         localStorage.removeItem('cogo_user');
       }
     }
+
+    const { tab: urlTab, mode: urlMode } = parseUrlToTab(window.location.pathname);
+    setAuthMode(urlMode);
+
+    if (hasValidUser) {
+      const targetTab = urlTab === 'login' ? 'home' : urlTab;
+      setActiveTab(targetTab);
+      setPreviousTab(targetTab);
+      const targetUrl = getUrlForTab(targetTab, urlMode);
+      window.history.replaceState({ tab: targetTab }, '', targetUrl);
+    } else {
+      setActiveTab('login');
+      setPreviousTab('login');
+      const targetUrl = urlMode === 'register' ? '/register' : '/login';
+      window.history.replaceState({ tab: 'login', mode: urlMode }, '', targetUrl);
+    }
+
+    const handlePopState = () => {
+      const { tab, mode } = parseUrlToTab(window.location.pathname);
+      setAuthMode(mode);
+      setActiveTab(tab);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   useEffect(() => {
@@ -60,16 +147,31 @@ export default function Home() {
     };
     window.addEventListener('navigate', handleNavigate as EventListener);
     return () => window.removeEventListener('navigate', handleNavigate as EventListener);
-  }, [activeTab]);
+  }, [activeTab, authMode]);
 
-  const navigateTo = (tab: string) => {
+  const navigateTo = (tab: string, mode?: 'login' | 'register') => {
     setPreviousTab(activeTab);
     setActiveTab(tab);
+    const targetMode = mode || authMode;
+    if (mode) setAuthMode(mode);
+
+    const targetUrl = getUrlForTab(tab, targetMode);
+    if (window.location.pathname + window.location.search !== targetUrl) {
+      window.history.pushState({ tab, mode: targetMode }, '', targetUrl);
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('cogo_user');
-    navigateTo('login');
+    navigateTo('login', 'login');
+  };
+
+  const handleLoginModeChange = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    const targetUrl = mode === 'register' ? '/register' : '/login';
+    if (window.location.pathname !== targetUrl) {
+      window.history.pushState({ tab: 'login', mode }, '', targetUrl);
+    }
   };
 
   const renderHomeContent = () => (
@@ -84,7 +186,13 @@ export default function Home() {
       {/* Mobile Frame Container */}
       <div className="w-full max-w-[420px] h-[100dvh] sm:h-[850px] bg-[#f9f9ff] sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-8 border-gray-900 mx-auto">
         
-        {activeTab === 'login' && <Login onLoginSuccess={() => navigateTo('home')} />}
+        {activeTab === 'login' && (
+          <Login 
+            initialMode={authMode} 
+            onModeChange={handleLoginModeChange}
+            onLoginSuccess={() => navigateTo('home')} 
+          />
+        )}
         {activeTab === 'home' && renderHomeContent()}
         {activeTab === 'available-rides' && <AvailableRides onBack={() => setActiveTab(previousTab)} />}
         {activeTab === 'rides' && <Rides onFindRide={() => navigateTo('find-ride')} />}
