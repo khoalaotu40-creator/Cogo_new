@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api, Location } from '../../lib/api';
 import { 
-  Search, Map, Clock, Users, User, ArrowRight, Loader2, X, 
+  Search, Map as MapIcon, Clock, Users, User, ArrowRight, Loader2, X, 
   MapPin, Star, ShieldCheck, ChevronRight, ArrowLeft, Plus, Minus,
   MessageCircle, Leaf, CheckCircle2, Car, Sparkles, Filter,
   Radio, Navigation, Waves, Wifi, Power
@@ -336,11 +336,23 @@ export default function Feed({ onStart, onToggleFooter }: FeedProps) {
 
   // Merge DB posts with preset sample trips for a rich, realistic feed
   const allPosts = useMemo(() => {
-    const rawList = feedType === 'tham_gia' 
-      ? [...PRESET_DRIVER_TRIPS, ...dbPosts.filter(p => p.id > 200 || p.departurePoint)]
-      : PRESET_POOLING_REQUESTS;
+    // 1. Collect all preset IDs to avoid duplicates from DB
+    const presetIds = new Set([...PRESET_DRIVER_TRIPS.map(p => p.id), ...PRESET_POOLING_REQUESTS.map(p => p.id)]);
+    
+    // 2. Get unique DB posts that are NOT in presets
+    const newDbPosts = dbPosts.filter(p => !presetIds.has(p.id));
 
-    return rawList.map((p, idx) => {
+    // 3. Assemble raw list depending on feed type
+    const rawList = feedType === 'tham_gia' 
+      ? [...PRESET_DRIVER_TRIPS, ...newDbPosts]
+      : [...PRESET_POOLING_REQUESTS, ...newDbPosts];
+
+    // 4. Double-check uniqueness just in case (e.g. duplicate DB entries)
+    const uniqueMap = new Map<number, Post>();
+    rawList.forEach(p => uniqueMap.set(p.id, p as Post));
+    const uniqueList: Post[] = Array.from(uniqueMap.values());
+
+    return uniqueList.map((p, idx) => {
       const dest = p.destinationPoint || p.dropoffLocation?.name || 'Đại học Công nghệ Thông tin UIT';
       const tag = p.tag || getDestinationTag(dest);
       const gradient = p.gradient || getDestinationGradient(tag, idx);
@@ -767,7 +779,7 @@ export default function Feed({ onStart, onToggleFooter }: FeedProps) {
                     onClick={() => setViewingRouteForPost(selectedDetailPost)}
                     className="bg-[#006b47] hover:bg-[#00875a] text-white text-[12px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md"
                   >
-                    <Map className="w-3.5 h-3.5" />
+                    <MapIcon className="w-3.5 h-3.5" />
                     <span>Xem lộ trình</span>
                   </button>
                 )}
