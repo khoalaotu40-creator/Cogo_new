@@ -141,14 +141,6 @@ export default function Profile() {
         </button>
 
         <button 
-          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'rides' }))} 
-          className="bg-white/80 p-2 rounded-full text-[#141b2c] hover:bg-white shadow-sm border border-[#bdcac0]/30 transition-colors"
-          title="Chuyến của tôi"
-        >
-          <List className="w-5 h-5" />
-        </button>
-
-        <button 
           onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))} 
           className="bg-white/80 p-2 rounded-full text-[#141b2c] hover:bg-white shadow-sm border border-[#bdcac0]/30 transition-colors"
           title="Cài đặt"

@@ -109,7 +109,7 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/:id/join", async (req, res) => {
-  const postId = req.params.id;
+  const postId = parseInt(req.params.id, 10) || req.params.id;
   const { user_id, message, requested_seats, pickup_point, dropoff_point } = req.body;
   
   if (!user_id) {
@@ -117,13 +117,35 @@ router.post("/:id/join", async (req, res) => {
   }
 
   try {
+    // 1. Ensure post exists in table posts (in case it's a preset/dynamic ride)
+    try {
+      const checkPost = await pool.query('SELECT post_id FROM posts WHERE post_id = $1', [postId]);
+      if (checkPost.rows.length === 0 && !isNaN(Number(postId))) {
+        let fallbackUserId = 1;
+        const findUser = await pool.query('SELECT id_user FROM users LIMIT 1');
+        if (findUser.rows.length > 0 && findUser.rows[0].id_user) {
+          fallbackUserId = findUser.rows[0].id_user;
+        }
+
+        await pool.query(
+          `INSERT INTO posts (post_id, user_id, content, departure_point, destination_point, status, created_at)
+           VALUES ($1, $2, 'Chuyến ghép xe / đi chung sinh viên', 'Điểm đón', 'Điểm đến', 'active', CURRENT_TIMESTAMP)
+           ON CONFLICT (post_id) DO NOTHING`,
+          [postId, fallbackUserId]
+        );
+      }
+    } catch (e) {
+      console.warn("Auto-seeding post notice:", e);
+    }
+
+    // 2. Insert join request
     const { rows } = await pool.query(
       `INSERT INTO post_requests (post_id, user_id, status, created_at, message, requested_seats, pickup_point, dropoff_point)
        VALUES ($1, $2, 'pending', CURRENT_TIMESTAMP, $3, $4, $5, $6)
        RETURNING *`,
        [
          postId, 
-         user_id, 
+         String(user_id), 
          message || '', 
          requested_seats || 1, 
          pickup_point ? JSON.stringify(pickup_point) : null, 
@@ -131,9 +153,9 @@ router.post("/:id/join", async (req, res) => {
        ]
     );
     res.json(rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating post request:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 
@@ -142,8 +164,8 @@ router.get("/requests/:userId", async (req, res) => {
   
   try {
     const { rows } = await pool.query(
-      `SELECT post_id, status FROM post_requests WHERE user_id = $1`,
-      [userId]
+      `SELECT post_id, status FROM post_requests WHERE user_id = $1 OR user_id = $2`,
+      [String(userId), userId]
     );
     res.json(rows);
   } catch (error) {
@@ -158,14 +180,17 @@ router.get("/notifications/:userId", async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT pr.request_id, pr.post_id, pr.user_id as requester_id, pr.status, pr.created_at, pr.message, pr.requested_seats, pr.pickup_point, pr.dropoff_point,
-              u.name as requester_name, u.avatar_url as requester_avatar,
-              p.content, p.departure_point, p.destination_point
+              COALESCE(u.name, 'Người dùng') as requester_name, 
+              COALESCE(u.avatar_url, 'https://i.pravatar.cc/150') as requester_avatar,
+              COALESCE(p.content, 'Yêu cầu ghép chuyến') as content, 
+              p.departure_point, 
+              p.destination_point
        FROM post_requests pr
-       JOIN posts p ON pr.post_id = p.post_id
-       JOIN users u ON pr.user_id = u.id_user
-       WHERE p.user_id = $1 AND pr.status = 'pending'
+       LEFT JOIN posts p ON pr.post_id = p.post_id
+       LEFT JOIN users u ON pr.user_id = u.id_user::text OR pr.user_id = u.id::text
+       WHERE (p.user_id = $1 OR p.user_id::text = $2) AND pr.status = 'pending'
        ORDER BY pr.created_at DESC`,
-      [userId]
+      [Number(userId) || 0, String(userId)]
     );
     res.json(rows);
   } catch (error) {

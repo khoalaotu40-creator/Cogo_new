@@ -3,7 +3,8 @@ import { api, Location } from '../../lib/api';
 import { 
   Search, Map, Clock, Users, User, ArrowRight, Loader2, X, 
   MapPin, Star, ShieldCheck, ChevronRight, ArrowLeft, Plus, Minus,
-  MessageCircle, Leaf, CheckCircle2, Car, Sparkles, Filter
+  MessageCircle, Leaf, CheckCircle2, Car, Sparkles, Filter,
+  Radio, Navigation, Waves, Wifi, Power
 } from 'lucide-react';
 import JoinRequestModal from './JoinRequestModal';
 import RouteMap from './RouteMap';
@@ -201,6 +202,15 @@ export default function Feed({ onStart, onToggleFooter }: FeedProps) {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   
+  // Online & Location Radar State
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    return localStorage.getItem('cogo_is_online') === 'true';
+  });
+  const [isScanning, setIsScanning] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [scanStepText, setScanStepText] = useState('Chạm để chia sẻ vị trí và tìm chuyến');
+  const [detectedLocation, setDetectedLocation] = useState('KTX Khu B, ĐHQG TP.HCM');
+
   const [joinStatus, setJoinStatus] = useState<Record<number, 'pending' | 'joined' | 'accepted'>>({});
   const [joiningPost, setJoiningPost] = useState<Post | null>(null);
   const [viewingRouteForPost, setViewingRouteForPost] = useState<Post | null>(null);
@@ -217,6 +227,53 @@ export default function Feed({ onStart, onToggleFooter }: FeedProps) {
   });
   
   const [requestedSeats, setRequestedSeats] = useState(1);
+
+  const handleGoOnline = () => {
+    if (isScanning || isFadingOut) return;
+    setIsScanning(true);
+    setScanStepText('Đang lấy tọa độ GPS của bạn...');
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(4);
+          const lng = pos.coords.longitude.toFixed(4);
+          setDetectedLocation(`Tọa độ: ${lat}°N, ${lng}°E`);
+        },
+        () => {
+          setDetectedLocation('KTX Khu B, ĐHQG TP.HCM');
+        },
+        { timeout: 2500 }
+      );
+    }
+
+    setTimeout(() => {
+      setScanStepText('Đang phát sóng kết nối các chuyến xe lân cận...');
+    }, 450);
+
+    setTimeout(() => {
+      setScanStepText('Đã kết nối vị trí! Đang chuyển đến trang chủ...');
+      // Start smooth fade out of the offline screen
+      setIsFadingOut(true);
+    }, 1000);
+
+    setTimeout(() => {
+      setIsScanning(false);
+      setIsFadingOut(false);
+      setIsOnline(true);
+      localStorage.setItem('cogo_is_online', 'true');
+    }, 1500);
+  };
+
+  const handleGoOffline = () => {
+    setIsFadingOut(true);
+    setTimeout(() => {
+      setIsOnline(false);
+      setIsFadingOut(false);
+      localStorage.setItem('cogo_is_online', 'false');
+      setScanStepText('Chạm để chia sẻ vị trí và tìm chuyến');
+    }, 350);
+  };
 
   // Sync footer visibility with active modals
   useEffect(() => {
@@ -333,11 +390,155 @@ export default function Feed({ onStart, onToggleFooter }: FeedProps) {
     return `${count} yêu cầu ghép xe`;
   }, [filteredPosts.length, feedType]);
 
+  // If user is not online yet, render the "bạn đã online chưa" radar water-ripple screen
+  if (!isOnline) {
+    return (
+      <div className={`flex-1 w-full h-full relative bg-[#ffffff] text-[#141b2c] flex flex-col font-sans select-none overflow-y-auto no-scrollbar transition-all duration-500 ease-out ${
+        isFadingOut ? 'page-transition-exit opacity-0 scale-95' : 'page-transition-enter opacity-100 scale-100'
+      }`}>
+        {/* Top Header Bar */}
+        <div className="px-6 pt-9 pb-3 flex items-center justify-between z-20 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-[14px] bg-[#e6f2ec] flex items-center justify-center text-[#006b47]">
+              <Car className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <span className="text-[26px] font-black text-[#141b2c] tracking-tight">
+              Cogo
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0f2f1] text-[#6f7a76] text-[12px] font-semibold">
+            <span className="w-2 h-2 rounded-full bg-red-400"></span>
+            <span>Chưa online</span>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 text-center z-10">
+          
+          {/* Header Title */}
+          <div className="mb-2">
+            <h1 className="text-[28px] sm:text-[30px] font-extrabold text-[#141b2c] tracking-tight leading-tight">
+              bạn đã online chưa
+            </h1>
+            <p className="text-[13.5px] text-[#6f7a76] mt-2 max-w-[290px] mx-auto leading-relaxed">
+              Chạm vào nút để bật định vị, chia sẻ vị trí của bạn và khám phá các chuyến xe xung quanh.
+            </p>
+          </div>
+
+          {/* Central Water Ripple Radar Button */}
+          <div className="relative flex items-center justify-center my-8 sm:my-10">
+            
+            {/* Water Ripple Waves (sóng nước vỗ ra khi ấn) */}
+            {isScanning && (
+              <>
+                <div className="absolute w-44 h-44 sm:w-48 sm:h-48 rounded-full border-2 border-[#006b47]/70 bg-[#006b47]/10 animate-water-ripple-1 pointer-events-none" />
+                <div className="absolute w-44 h-44 sm:w-48 sm:h-48 rounded-full border-2 border-[#006b47]/50 bg-[#006b47]/10 animate-water-ripple-2 pointer-events-none" />
+                <div className="absolute w-44 h-44 sm:w-48 sm:h-48 rounded-full border-2 border-[#006b47]/30 bg-[#006b47]/5 animate-water-ripple-3 pointer-events-none" />
+                <div className="absolute w-44 h-44 sm:w-48 sm:h-48 rounded-full border border-[#006b47]/20 animate-water-ripple-slow pointer-events-none" />
+              </>
+            )}
+
+            {/* Double Outer Rings (matching wireframe drawing) */}
+            <div className={`w-56 h-56 sm:w-60 sm:h-60 rounded-full border-4 ${isScanning ? 'border-[#006b47]/40 scale-105' : 'border-[#bdcac0]/40'} flex items-center justify-center relative p-2 transition-all duration-500`}>
+              
+              {/* Inner Circle Interactive Button */}
+              <button
+                type="button"
+                onClick={handleGoOnline}
+                disabled={isScanning}
+                className={`w-44 h-44 sm:w-48 sm:h-48 rounded-full bg-gradient-to-tr from-[#006b47] to-[#00875a] hover:from-[#00875a] hover:to-[#00a86b] text-white shadow-[0_12px_36px_rgba(0,107,71,0.35)] flex flex-col items-center justify-center p-4 cursor-pointer transition-all duration-300 transform active:scale-95 z-10 select-none ${
+                  isScanning ? 'animate-pulse-glow' : 'hover:scale-[1.02]'
+                }`}
+                title="Bật online và chia sẻ vị trí"
+              >
+                <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center mb-1.5">
+                  {isScanning ? (
+                    <Waves className="w-6 h-6 animate-pulse text-white" />
+                  ) : (
+                    <Navigation className="w-6 h-6 text-white rotate-45" />
+                  )}
+                </div>
+
+                <span className="font-extrabold text-[15px] tracking-wide uppercase">
+                  {isScanning ? "Đang phát sóng..." : "BẬT ONLINE"}
+                </span>
+                
+                <span className="text-[12px] text-white/85 font-medium mt-0.5">
+                  Chia sẻ vị trí
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Status microcopy box */}
+          <div className="w-full max-w-[320px] bg-[#f9f9ff] border border-[#eceeed] rounded-[18px] p-3.5 flex items-center gap-3 text-left transition-all">
+            <div className="w-8 h-8 rounded-full bg-[#e6f2ec] flex items-center justify-center text-[#006b47] shrink-0">
+              {isScanning ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#006b47]" />
+              ) : (
+                <MapPin className="w-4 h-4" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold text-[#8a9490] uppercase tracking-wider">
+                Trạng thái định vị
+              </div>
+              <div className="text-[13px] font-bold text-[#141b2c] truncate">
+                {scanStepText}
+              </div>
+            </div>
+          </div>
+
+          {/* Direct CTA button below */}
+          <button
+            type="button"
+            onClick={handleGoOnline}
+            disabled={isScanning}
+            className="mt-4 w-full max-w-[320px] bg-[#006b47] hover:bg-[#00875a] text-white font-bold py-3.5 px-6 rounded-[16px] text-[14.5px] shadow-[0_4px_16px_rgba(0,107,71,0.25)] active:scale-98 transition-all flex items-center justify-center gap-2"
+          >
+            {isScanning ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang phát sóng vị trí...</span>
+              </>
+            ) : (
+              <>
+                <span>Chia sẻ vị trí & Xem chuyến</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 w-full h-full relative bg-[#f9f9ff] text-[#141b2c] flex flex-col font-sans select-none overflow-hidden">
+    <div className={`flex-1 w-full h-full relative bg-[#f9f9ff] text-[#141b2c] flex flex-col font-sans select-none overflow-hidden transition-all duration-500 ease-out ${
+      isFadingOut ? 'page-transition-exit opacity-0 scale-95' : 'page-transition-enter opacity-100 scale-100'
+    }`}>
       
+      {/* Active Online Status Bar */}
+      <div className="px-5 pt-3 pb-2 bg-[#e6f2ec]/70 border-b border-[#006b47]/10 flex items-center justify-between text-[#006b47] text-[12px] font-medium shrink-0">
+        <div className="flex items-center gap-2 truncate">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#006b47] animate-pulse shrink-0"></span>
+          <span className="truncate font-bold">
+            Online: <span className="font-normal text-[#141b2c]">{detectedLocation}</span>
+          </span>
+        </div>
+        <button
+          onClick={handleGoOffline}
+          className="text-[11.5px] font-bold text-[#006b47] hover:text-[#00875a] px-2 py-0.5 rounded-md hover:bg-white transition-all shrink-0"
+          title="Chuyển về màn hình radar offline"
+        >
+          Tắt online
+        </button>
+      </div>
+
       {/* Top Header Tabs */}
-      <div className="z-30 px-5 pt-8 sm:pt-9 pb-0 bg-white border-b border-[#edf0ee] shrink-0">
+      <div className="z-30 px-5 pt-4 pb-0 bg-white border-b border-[#edf0ee] shrink-0">
         <div className="flex items-center gap-7">
           <button 
             onClick={() => { setFeedType('tham_gia'); }}

@@ -186,28 +186,30 @@ export default function Home() {
       {/* Mobile Frame Container */}
       <div className="w-full max-w-[420px] h-[100dvh] sm:h-[850px] bg-[#f9f9ff] sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-8 border-gray-900 mx-auto">
         
-        {activeTab === 'login' && (
-          <Login 
-            initialMode={authMode} 
-            onModeChange={handleLoginModeChange}
-            onLoginSuccess={() => navigateTo('home')} 
-          />
-        )}
-        {activeTab === 'home' && renderHomeContent()}
-        {activeTab === 'available-rides' && <AvailableRides onBack={() => setActiveTab(previousTab)} />}
-        {activeTab === 'rides' && <Rides onFindRide={() => navigateTo('find-ride')} />}
-        {activeTab === 'find-ride' && <FindRideForm onBack={() => setActiveTab(previousTab)} onSuccess={(type) => navigateTo(type === 'schedule' ? 'home' : 'rides')} />}
-        {activeTab === 'profile' && <Profile />}
-        {activeTab === 'messages' && <Messages />}
-        {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} onNavigateToProfile={() => navigateTo('profile')} onRegisterDriver={() => navigateTo('driver-registration')} onSwitchToDriverMode={() => navigateTo('driver-home')} />}
-        {activeTab === 'driver-home' && <DriverHome onBack={() => setActiveTab('settings')} />}
-        {activeTab === 'driver-registration' && <DriverRegistration onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('settings')} />}
-        {activeTab === 'notifications' && (
-          <Notifications 
-            onBack={() => setActiveTab(previousTab)} 
-            currentUser={localStorage.getItem('cogo_user') ? JSON.parse(localStorage.getItem('cogo_user') as string) : null}
-          />
-        )}
+        <div key={activeTab} className="flex-1 w-full h-full flex flex-col page-transition-enter overflow-hidden relative">
+          {activeTab === 'login' && (
+            <Login 
+              initialMode={authMode} 
+              onModeChange={handleLoginModeChange}
+              onLoginSuccess={() => navigateTo('home')} 
+            />
+          )}
+          {activeTab === 'home' && renderHomeContent()}
+          {activeTab === 'available-rides' && <AvailableRides onBack={() => setActiveTab(previousTab)} />}
+          {activeTab === 'rides' && <Rides onFindRide={() => navigateTo('find-ride')} />}
+          {activeTab === 'find-ride' && <FindRideForm onBack={() => setActiveTab(previousTab)} onSuccess={(type) => navigateTo(type === 'schedule' ? 'home' : 'rides')} />}
+          {activeTab === 'profile' && <Profile />}
+          {activeTab === 'messages' && <Messages />}
+          {activeTab === 'settings' && <Settings onLogout={handleLogout} onBack={() => setActiveTab(previousTab)} onNavigateToProfile={() => navigateTo('profile')} onRegisterDriver={() => navigateTo('driver-registration')} onSwitchToDriverMode={() => navigateTo('driver-home')} />}
+          {activeTab === 'driver-home' && <DriverHome onBack={() => setActiveTab('settings')} />}
+          {activeTab === 'driver-registration' && <DriverRegistration onBack={() => setActiveTab(previousTab)} onSuccess={() => navigateTo('settings')} />}
+          {activeTab === 'notifications' && (
+            <Notifications 
+              onBack={() => setActiveTab(previousTab)} 
+              currentUser={localStorage.getItem('cogo_user') ? JSON.parse(localStorage.getItem('cogo_user') as string) : null}
+            />
+          )}
+        </div>
 
         {/* Bottom Navigation */}
         {!hideFooter && activeTab !== 'find-ride' && activeTab !== 'login' && activeTab !== 'settings' && activeTab !== 'available-rides' && activeTab !== 'driver-registration' && activeTab !== 'notifications' && activeTab !== 'driver-home' && (
